@@ -491,6 +491,9 @@ export class Network extends Emitter {
   peerCount()  { return [...this.#peers.values()].filter(p => p.state === 'open').length }
   isSwReady()  { return this.#swReady }
 
+  /** Publicly trigger a presence announcement on all transports */
+  announce()   { this.#announce() }
+
   // ── Internal log (emits 'log' for UI) ────────────────────────────────────
   _log(dir, type, info) { this.emit('log', { dir, type, info }) }
 
