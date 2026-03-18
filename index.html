@@ -370,8 +370,8 @@ button{font-family:var(--ui);cursor:pointer;transition:all .13s}
   <div id="vault-export-modal-body" style="display:none">
     <div class="P-sub">Encrypt your keypair with a passphrase. The blob is safe to store anywhere.</div>
     <div class="arow">
-      <div class="vault-field"><label>Passphrase</label><input type="password" id="vault-passphrase" placeholder="Strong passphrase (≥8 chars)"></div>
-      <div class="vault-field"><label>Confirm</label><input type="password" id="vault-pass-confirm" placeholder="Repeat passphrase"></div>
+      <div class="vault-field"><label>Passphrase</label><input type="password" id="vault-passphrase" autocomplete="new-password" placeholder="Strong passphrase (≥8 chars)"></div>
+      <div class="vault-field"><label>Confirm</label><input type="password" id="vault-pass-confirm" autocomplete="new-password" placeholder="Repeat passphrase"></div>
     </div>
     <div class="btn-row"><button class="btn btn-sm btn-a" onclick="IdentityUI.exportVault()">🔒 Encrypt & Export</button></div>
     <div id="vault-result" style="margin-top:8px"></div>
@@ -379,7 +379,7 @@ button{font-family:var(--ui);cursor:pointer;transition:all .13s}
   </div>
   <div id="vault-import-modal-body" style="display:none">
     <div class="vault-field"><label>Encrypted Blob</label><textarea class="signal-box" id="vault-import-json" rows="7" placeholder="Paste encrypted vault JSON…"></textarea></div>
-    <div class="vault-field"><label>Passphrase</label><input type="password" id="vault-import-pp" placeholder="Enter passphrase"></div>
+    <div class="vault-field"><label>Passphrase</label><input type="password" id="vault-import-pp" autocomplete="new-password" placeholder="Enter passphrase"></div>
     <div class="btn-row"><button class="btn btn-sm btn-c" onclick="IdentityUI.importVault()">🔓 Decrypt & Restore</button></div>
     <div id="vault-import-result" style="margin-top:8px"></div>
   </div>
@@ -1731,6 +1731,9 @@ const Mesh = (() => {
 
   // Manual signal (cross-origin / cross-network)
   function processSignal(json) {
+    if (!json || (typeof json === 'string' && !json.trim())) {
+      throw new Error('Invalid signal: textarea is empty — paste an Offer or Answer JSON first');
+    }
     try {
       const msg = typeof json === 'string' ? JSON.parse(json) : json;
       _handleEnvelope(msg, null, 'manual');
@@ -2533,7 +2536,7 @@ function showSignalModal() {
     <div class="afield"><label>Signal JSON</label><textarea class="signal-box" id="signal-box" rows="8" placeholder="Paste Offer or Answer JSON here…"></textarea></div>
     <div class="btn-row">
       <button class="btn btn-sm btn-c" onclick="Mesh.makeOffer().then(()=>toast('Offer ready','info'))">Generate Offer</button>
-      <button class="btn btn-sm btn-a" onclick="Mesh.processSignal($('signal-box').value);closeModal()">Process Signal</button>
+      <button class="btn btn-sm btn-a" onclick="try{Mesh.processSignal($('signal-box').value);closeModal();}catch(e){toast(e.message,'err');}">Process Signal</button>
     </div>
   `);
 }
