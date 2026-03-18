@@ -1,0 +1,2617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAR v1 — Sovereign Action Runtime</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#030608;--bg2:#070f15;--bg3:#0b1a24;--bg4:#0f2333;
+  --g:#00e8c3;--g2:#00b896;--cy:#00d4ff;--am:#ffb000;--re:#ff3355;--pu:#9d60ff;--pk:#ff60b0;
+  --b0:rgba(0,232,195,.06);--b1:rgba(0,232,195,.14);--b2:rgba(0,232,195,.28);
+  --tx:#a8cec8;--tx2:#3d7068;--tx3:#1a3430;
+  --sm:'Space Mono',monospace;--ui:'Syne',sans-serif;--jb:'JetBrains Mono',monospace;
+  --gg:0 0 18px rgba(0,232,195,.5);--gc:0 0 18px rgba(0,212,255,.5);--ga:0 0 18px rgba(255,176,0,.5);--gp:0 0 18px rgba(157,96,255,.5);--gr:0 0 18px rgba(255,51,85,.5);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);overflow:hidden;color:var(--tx);font-family:var(--ui);font-size:13px}
+body{background-image:radial-gradient(ellipse 55% 45% at 15% 20%,rgba(0,232,195,.025) 0%,transparent 65%),radial-gradient(ellipse 45% 55% at 85% 80%,rgba(0,212,255,.018) 0%,transparent 65%);}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.035) 2px,rgba(0,0,0,.035) 4px);}
+#grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,232,195,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,232,195,.025) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse 90% 90% at 50% 50%,black 0%,transparent 100%);}
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b1);border-radius:2px}
+
+/* TOPBAR */
+#topbar{position:fixed;top:0;left:0;right:0;height:52px;z-index:300;background:rgba(3,6,8,.96);backdrop-filter:blur(24px);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 14px;gap:8px;}
+.logo-mark{font-family:var(--sm);font-size:13px;font-weight:700;letter-spacing:4px;color:var(--g);text-shadow:var(--gg);white-space:nowrap;user-select:none}
+.logo-sub{font-size:7px;letter-spacing:3px;color:var(--tx3);font-family:var(--ui);font-weight:500;margin-top:2px}
+.vsep{width:1px;height:26px;background:var(--b0);flex-shrink:0}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--tx3);transition:all .4s;flex-shrink:0}
+.pulse-dot.live{background:var(--g);box-shadow:var(--gg);animation:hb 2.4s ease-in-out infinite}
+@keyframes hb{0%,100%{opacity:1}50%{opacity:.35}}
+#id-chip{font-family:var(--sm);font-size:9px;color:var(--cy);text-shadow:var(--gc);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat-pill{font-family:var(--sm);font-size:9px;padding:2px 7px;background:var(--b0);border:1px solid var(--b1);border-radius:20px;display:flex;align-items:center;gap:4px;white-space:nowrap;user-select:none}
+.pill-k{color:var(--tx3);font-size:7px;letter-spacing:1px;text-transform:uppercase}.pill-v{color:var(--g);text-shadow:var(--gg)}
+.spacer{flex:1}
+.ollama-top{display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;border:1px solid;font-family:var(--sm);font-size:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.ollama-top.ok{border-color:rgba(0,232,195,.3);color:var(--g);background:var(--b0)}.ollama-top.err{border-color:rgba(255,51,85,.3);color:var(--re)}.ollama-top.check{border-color:rgba(255,176,0,.3);color:var(--am)}
+.ollama-dot{width:4px;height:4px;border-radius:50%;background:currentColor;animation:hb 1.5s infinite}
+.mem-widget{display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;background:var(--b0);border:1px solid var(--b1)}
+.mem-label{font-family:var(--sm);font-size:7px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase}
+.mem-bar-wrap{width:40px;height:2px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.mem-bar-fill{height:100%;background:var(--g);border-radius:2px;transition:width 1s,background 1s}
+#mem-pct{font-family:var(--sm);font-size:7px;color:var(--g)}
+#tb-clock{font-family:var(--sm);font-size:9px;color:var(--tx2);letter-spacing:1px;white-space:nowrap}
+.mainnav{display:flex;gap:1px}
+.mnav{padding:0 10px;height:52px;background:none;border:none;border-bottom:2px solid transparent;font-family:var(--ui);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.mnav:hover{color:var(--tx);background:rgba(0,232,195,.03)}.mnav.on{color:var(--g);border-bottom-color:var(--g);text-shadow:var(--gg)}
+
+/* SHELL */
+#shell{position:fixed;inset:0;top:52px;z-index:1}
+.view{position:absolute;inset:0;display:none;overflow-y:auto;overflow-x:hidden;padding:18px}
+.view.on{display:block}
+.maxw{max-width:860px;margin:0 auto}
+
+/* PANELS */
+.P{background:var(--bg2);border:1px solid var(--b0);border-radius:12px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;transition:border .15s}
+.P::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,232,195,.018),transparent 55%);pointer-events:none}
+.P:hover{border-color:var(--b1)}
+.P-hd{font-family:var(--sm);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--g);text-shadow:var(--gg);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.P-sub{font-size:11px;color:var(--tx2);margin-bottom:10px;line-height:1.65}
+
+/* STATS */
+.statrow{display:grid;gap:8px;margin-bottom:14px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.sc{background:var(--bg2);border:1px solid var(--b0);border-radius:8px;padding:12px 14px;transition:all .2s}
+.sc:hover{border-color:var(--b1)}
+.sc-k{font-size:7px;color:var(--tx2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;font-weight:700;font-family:var(--ui)}
+.sc-v{font-family:var(--sm);font-size:22px;transition:all .3s}
+.g{color:var(--g);text-shadow:var(--gg)}.c{color:var(--cy);text-shadow:var(--gc)}.a{color:var(--am);text-shadow:var(--ga)}.p{color:var(--pu);text-shadow:var(--gp)}.r{color:var(--re);text-shadow:var(--gr)}
+
+/* BUTTONS */
+button{font-family:var(--ui);cursor:pointer;transition:all .13s}
+.btn{padding:6px 14px;border-radius:6px;border:1px solid var(--b1);background:rgba(0,232,195,.06);color:var(--g);font-size:9px;font-weight:700;letter-spacing:1px;font-family:var(--sm);text-transform:uppercase}
+.btn:hover{background:rgba(0,232,195,.15);box-shadow:var(--gg)}.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-sm{padding:3px 9px;font-size:8px}
+.btn-c{border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.06);color:var(--cy)}.btn-c:hover{background:rgba(0,212,255,.15)}
+.btn-a{border-color:rgba(255,176,0,.3);background:rgba(255,176,0,.06);color:var(--am)}.btn-a:hover{background:rgba(255,176,0,.15)}
+.btn-r{border-color:rgba(255,51,85,.3);background:rgba(255,51,85,.06);color:var(--re)}.btn-r:hover{background:rgba(255,51,85,.15)}
+.btn-p{border-color:rgba(157,96,255,.3);background:rgba(157,96,255,.06);color:var(--pu)}.btn-p:hover{background:rgba(157,96,255,.15)}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+/* FORMS */
+.afield{margin-bottom:12px}
+.afield label{display:block;font-size:8px;color:var(--tx2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;font-weight:600}
+.afield input,.afield textarea,.afield select{width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:6px;color:var(--tx);font-family:var(--sm);font-size:11px;padding:7px 10px;outline:none;transition:border .12s}
+.afield input:focus,.afield textarea:focus,.afield select:focus{border-color:var(--b2)}
+.afield textarea{resize:vertical;min-height:60px;line-height:1.6}
+.afield select option{background:var(--bg3)}
+.arow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.submit-action{width:100%;padding:12px;border-radius:8px;border:1px solid var(--b2);background:linear-gradient(135deg,rgba(0,232,195,.15),rgba(0,212,255,.08));color:var(--g);font-family:var(--sm);font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .16s;margin-top:5px}
+.submit-action:hover{background:linear-gradient(135deg,rgba(0,232,195,.25),rgba(0,212,255,.14));box-shadow:var(--gg)}.submit-action:disabled{opacity:.3;cursor:not-allowed}
+
+/* LOG */
+.log{background:var(--bg);border:1px solid var(--b0);border-radius:6px;padding:6px;max-height:220px;overflow-y:auto;font-family:var(--sm);font-size:9px}
+.le{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid rgba(0,232,195,.04);align-items:flex-start}
+.le:last-child{border-bottom:none}
+.le-ts{color:var(--tx3);min-width:60px;flex-shrink:0;font-size:8px}
+.le-type{min-width:80px;flex-shrink:0;font-weight:700;font-size:8px}
+.le-type.ok{color:var(--g)}.le-type.err{color:var(--re)}.le-type.warn{color:var(--am)}.le-type.info{color:var(--cy)}
+.le-msg{color:var(--tx2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px}
+
+/* FEED */
+.feed-item{padding:10px 0;border-bottom:1px solid var(--b0);display:flex;flex-direction:column;gap:3px}
+.feed-item:last-child{border-bottom:none}
+.feed-top{display:flex;align-items:center;gap:6px}
+.feed-kind{font-family:var(--sm);font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:1px 6px;border-radius:3px}
+.fk-message{background:rgba(0,212,255,.1);color:var(--cy);border:1px solid rgba(0,212,255,.2)}
+.fk-compute{background:rgba(255,176,0,.1);color:var(--am);border:1px solid rgba(255,176,0,.2)}
+.fk-govern{background:rgba(157,96,255,.1);color:var(--pu);border:1px solid rgba(157,96,255,.2)}
+.fk-ai{background:rgba(255,96,176,.1);color:var(--pk);border:1px solid rgba(255,96,176,.2)}
+.feed-author{font-size:9px;font-weight:700;color:var(--am)}
+.feed-time{font-size:8px;color:var(--tx3);margin-left:auto;font-family:var(--sm)}
+.feed-body{font-size:11px;line-height:1.6;color:var(--tx)}
+.feed-sig{font-family:var(--sm);font-size:7px;color:var(--tx3);letter-spacing:.5px}
+
+/* PROPOSAL */
+.prop-card{background:var(--bg3);border:1px solid var(--b0);border-radius:8px;padding:12px;margin-bottom:8px}
+.prop-id{font-family:var(--sm);font-size:8px;color:var(--g);margin-bottom:2px}
+.prop-data{font-size:11px;color:var(--tx);margin:4px 0;line-height:1.5}
+.prop-meta{font-size:8px;color:var(--tx2)}
+.vote-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-top:6px;display:flex}
+.vfy{background:var(--g);transition:width .4s}.vfn{background:var(--re);transition:width .4s}
+.result-passed{color:var(--g)}.result-failed{color:var(--re)}
+
+/* PEER */
+.peer-card{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--b0);border-radius:6px;margin-bottom:5px;transition:border .15s}
+.peer-card:hover{border-color:var(--b1)}
+.peer-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.peer-id{font-family:var(--sm);font-size:8px;color:var(--cy);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.peer-st{font-size:8px;font-weight:700}
+
+/* MSG BOXES */
+.msg-ok{font-size:11px;padding:7px 10px;background:rgba(0,232,195,.07);border-left:2px solid var(--g);border-radius:5px;color:var(--g);margin-top:6px;line-height:1.5}
+.msg-err{font-size:11px;padding:7px 10px;background:rgba(255,51,85,.07);border-left:2px solid var(--re);border-radius:5px;color:var(--re);margin-top:6px;line-height:1.5}
+.msg-info{font-size:11px;padding:7px 10px;background:rgba(0,212,255,.07);border-left:2px solid var(--cy);border-radius:5px;color:var(--cy);margin-top:6px;line-height:1.5}
+
+/* IDENTITY CARD */
+.id-card{background:var(--bg3);border:1px solid var(--b1);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+.id-card::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:radial-gradient(circle,rgba(0,232,195,.06),transparent 70%);pointer-events:none}
+.id-did{font-family:var(--sm);font-size:9px;color:var(--cy);word-break:break-all;margin:4px 0;line-height:1.6}
+.id-name-lg{font-size:16px;font-weight:700;color:var(--tx)}
+.id-bio-sm{font-size:10px;color:var(--tx2);margin-top:2px}
+.id-meta-sm{font-family:var(--sm);font-size:7px;color:var(--tx3);margin-top:6px}
+
+/* ACTION TYPES */
+.action-types{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.atype{background:var(--bg3);border:2px solid var(--b0);border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .18s}
+.atype:hover{border-color:var(--b2);transform:translateY(-2px)}.atype.sel{border-color:var(--g);box-shadow:0 0 20px rgba(0,232,195,.15);background:rgba(0,232,195,.04)}
+.atype-icon{font-size:20px;margin-bottom:4px}.atype-name{font-family:var(--sm);font-size:8px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:2px}.atype-desc{font-size:8px;color:var(--tx3);line-height:1.4}
+.atype.message .atype-name{color:var(--cy)}.atype.compute .atype-name{color:var(--am)}.atype.governance .atype-name{color:var(--pu)}.atype.analyze .atype-name{color:var(--pk)}
+.action-form{display:none}.action-form.on{display:block}
+
+/* NOTEBOOK */
+.nb-cell{background:var(--bg2);border:1px solid var(--b0);border-radius:10px;overflow:hidden;margin-bottom:10px;transition:border .15s}
+.nb-cell.running{border-color:var(--am)}.nb-cell.done{border-color:rgba(0,232,195,.2)}.nb-cell.error{border-color:rgba(255,51,85,.2)}
+.nb-hdr{display:flex;align-items:center;gap:7px;padding:7px 12px;background:var(--bg3);border-bottom:1px solid var(--b0)}
+.nb-num{font-family:var(--sm);font-size:8px;color:var(--tx3);background:var(--bg4);border:1px solid var(--b0);padding:1px 7px;border-radius:3px;min-width:26px;text-align:center}
+.nb-eng-pill{font-family:var(--sm);font-size:7px;padding:2px 7px;border-radius:3px;border:1px solid}
+.nb-eng-pill.js{border-color:rgba(255,176,0,.3);color:var(--am);background:rgba(255,176,0,.06)}
+.nb-run-btn{margin-left:auto;padding:2px 10px;border-radius:4px;font-family:var(--sm);font-size:8px;border:1px solid var(--b1);background:var(--b0);color:var(--g);cursor:pointer}
+.nb-run-btn:hover{background:rgba(0,232,195,.15)}
+.nb-del-btn{padding:2px 9px;border-radius:4px;font-family:var(--sm);font-size:8px;border:1px solid rgba(255,51,85,.2);background:rgba(255,51,85,.04);color:var(--re);cursor:pointer}
+.nb-status{font-family:var(--sm);font-size:7px;color:var(--tx3)}
+.nb-code{font-family:var(--jb);font-size:11px;line-height:1.65;color:var(--tx);background:var(--bg);border:none;width:100%;padding:12px;outline:none;resize:vertical;min-height:80px;tab-size:2}
+.nb-output{padding:10px 12px;border-top:1px solid var(--b0);min-height:30px}
+.nb-out-ok{font-family:var(--jb);font-size:10px;color:var(--g);line-height:1.6;white-space:pre-wrap;word-break:break-all}
+.nb-out-err{font-family:var(--jb);font-size:10px;color:var(--re);line-height:1.6}
+.nb-out-chart{width:100%;max-height:180px}
+.worker-grid{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px}
+.worker-dot{width:12px;height:12px;border-radius:2px;background:var(--bg4);border:1px solid var(--b0);display:flex;align-items:center;justify-content:center;font-size:6px;color:var(--tx3);transition:all .2s}
+.worker-dot.idle{background:rgba(0,232,195,.08);border-color:rgba(0,232,195,.2);color:var(--g)}
+.worker-dot.busy{background:rgba(255,176,0,.15);border-color:rgba(255,176,0,.3);color:var(--am);animation:hb .6s infinite}
+
+/* AI CHAT */
+.ai-chat{background:var(--bg);border:1px solid var(--b0);border-radius:8px;padding:10px;max-height:340px;overflow-y:auto;font-size:11px;line-height:1.7;display:flex;flex-direction:column;gap:8px}
+.ai-msg{padding:8px 12px;border-radius:7px;max-width:90%}
+.ai-msg.user{background:rgba(0,232,195,.07);border:1px solid rgba(0,232,195,.12);color:var(--tx);align-self:flex-end;font-family:var(--sm);font-size:10px}
+.ai-msg.assistant{background:var(--bg3);border:1px solid var(--b0);color:var(--tx);align-self:flex-start}
+.ai-code{background:var(--bg);border:1px solid var(--b1);border-radius:5px;padding:7px 10px;font-family:var(--jb);font-size:9px;color:var(--g);white-space:pre-wrap;word-break:break-all;margin-top:5px;position:relative}
+.ai-code-inject{position:absolute;top:4px;right:6px;font-size:7px;padding:2px 6px;border-radius:3px;border:1px solid var(--b1);background:var(--bg3);color:var(--tx2);cursor:pointer;font-family:var(--sm)}
+.ai-code-inject:hover{color:var(--g);border-color:var(--b2)}
+.ai-input-row{display:flex;gap:6px;margin-top:8px}
+.ai-input{flex:1;background:var(--bg);border:1px solid var(--b1);border-radius:6px;color:var(--tx);font-family:var(--jb);font-size:11px;padding:8px 10px;outline:none;resize:none;min-height:40px;max-height:100px;transition:border .12s}
+.ai-input:focus{border-color:var(--b2)}
+.ai-send{padding:8px 14px;border-radius:6px;border:1px solid var(--b2);background:rgba(0,232,195,.1);color:var(--g);font-family:var(--sm);font-size:9px;cursor:pointer;white-space:nowrap}
+.ai-send:hover{background:rgba(0,232,195,.2)}.ai-send:disabled{opacity:.3;cursor:not-allowed}
+.ai-preset{padding:2px 9px;border-radius:20px;font-family:var(--sm);font-size:7px;letter-spacing:1px;border:1px solid var(--b0);background:none;color:var(--tx2);cursor:pointer;transition:all .12s;text-transform:uppercase}
+.ai-preset:hover{border-color:var(--b1);color:var(--g)}.ai-preset.on{border-color:var(--b2);color:var(--g);background:var(--b0)}
+.ai-cursor{animation:hb .8s ease-in-out infinite;color:var(--g)}
+
+/* MESH CANVAS */
+#mesh-canvas{width:100%;height:200px;border-radius:8px;border:1px solid var(--b0);background:var(--bg);display:block}
+
+/* VAULT */
+.vault-field{margin-bottom:10px}
+.vault-field label{font-size:8px;color:var(--tx2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;display:block;font-weight:600}
+.vault-field input{width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:6px;color:var(--tx);font-family:var(--jb);font-size:11px;padding:7px 10px;outline:none}
+.vault-field input:focus{border-color:var(--b2)}
+.vault-data{width:100%;font-family:var(--jb);font-size:8px;background:var(--bg);border:1px solid var(--b1);border-radius:6px;color:var(--cy);padding:8px;resize:none;min-height:80px;outline:none;line-height:1.6}
+.signal-box{width:100%;background:var(--bg);border:1px solid var(--b1);border-radius:6px;color:var(--cy);font-family:var(--sm);font-size:8px;padding:7px 10px;outline:none;resize:vertical;min-height:70px;line-height:1.5}
+
+/* BOOT */
+#boot{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.boot-logo{font-family:var(--sm);font-size:28px;color:var(--g);text-shadow:var(--gg);letter-spacing:8px}
+.boot-sub{font-family:var(--ui);font-size:9px;color:var(--tx2);letter-spacing:4px;text-transform:uppercase}
+.boot-lines{width:380px;max-height:100px;overflow:hidden;font-family:var(--sm);font-size:8px;line-height:1.9;color:var(--g);opacity:.75}
+.boot-bar-wrap{width:260px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
+.boot-bar{height:100%;background:var(--g);width:0;transition:width .1s linear;box-shadow:var(--gg)}
+.boot-msg{font-family:var(--sm);font-size:9px;color:var(--tx3)}
+
+/* TOAST */
+#toast-wrap{position:fixed;bottom:16px;right:16px;z-index:9800;display:flex;flex-direction:column;gap:5px;align-items:flex-end;pointer-events:none}
+.toast{padding:7px 12px;border-radius:7px;font-family:var(--sm);font-size:8px;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.6);animation:tin .2s ease}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.tok{background:rgba(0,35,25,.97);border:1px solid rgba(0,232,195,.35);color:var(--g)}
+.tw{background:rgba(35,25,0,.97);border:1px solid rgba(255,176,0,.35);color:var(--am)}
+.te{background:rgba(35,0,10,.97);border:1px solid rgba(255,51,85,.35);color:var(--re)}
+.ti{background:rgba(0,15,30,.97);border:1px solid rgba(0,212,255,.35);color:var(--cy)}
+
+/* MODAL */
+#modal-bg{position:fixed;inset:0;z-index:8000;background:rgba(3,6,8,.88);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center}
+#modal-bg.open{display:flex}
+#modal{background:var(--bg2);border:1px solid var(--b2);border-radius:12px;padding:20px;min-width:340px;max-width:580px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal-hd{font-family:var(--sm);font-size:11px;color:var(--g);letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.modal-x{background:none;border:none;color:var(--tx2);cursor:pointer;font-size:16px;line-height:1}.modal-x:hover{color:var(--re)}
+
+/* MISC */
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.empty-state{text-align:center;padding:28px 0;color:var(--tx3);font-family:var(--sm);font-size:9px;letter-spacing:1px}
+.sle{display:grid;grid-template-columns:60px 90px 1fr;gap:6px;padding:2px 0;border-bottom:1px solid rgba(0,232,195,.03);align-items:baseline;font-family:var(--jb);font-size:9px}
+.sle-ts{color:var(--tx3);font-size:8px}.sle-type{font-size:8px;font-weight:700;text-transform:uppercase}.sle-msg{color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slog{background:var(--bg);border:1px solid var(--b0);border-radius:6px;padding:6px;max-height:360px;overflow-y:auto}
+</style>
+</head>
+<body>
+<div id="grid"></div>
+<div id="toast-wrap"></div>
+
+<div id="boot">
+  <div class="boot-logo">SAR</div>
+  <div class="boot-sub">Sovereign Action Runtime · Protocol v1</div>
+  <div class="boot-lines" id="boot-lines"></div>
+  <div class="boot-bar-wrap"><div class="boot-bar" id="boot-bar"></div></div>
+  <div class="boot-msg" id="boot-msg">initializing…</div>
+</div>
+
+<div id="modal-bg">
+  <div id="modal">
+    <div class="modal-hd"><span id="modal-title">Details</span><button class="modal-x" onclick="closeModal()">✕</button></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="topbar">
+  <div><div class="logo-mark">SAR·v1</div><div class="logo-sub">Sovereign Action Runtime</div></div>
+  <div class="vsep"></div>
+  <div class="pulse-dot" id="beacon"></div>
+  <div id="id-chip">no identity</div>
+  <div class="vsep"></div>
+  <div class="stat-pill"><span class="pill-k">peers</span><span class="pill-v" id="chip-peers">0</span></div>
+  <div class="stat-pill"><span class="pill-k">actions</span><span class="pill-v" id="chip-actions">0</span></div>
+  <div class="stat-pill"><span class="pill-k">ledger</span><span class="pill-v" id="chip-ledger">0</span></div>
+  <div class="vsep"></div>
+  <div id="ollama-pill" class="ollama-top check" onclick="AIUI.checkConnection()">
+    <div class="ollama-dot"></div><span id="ollama-pill-txt">ollama?</span>
+  </div>
+  <div class="mem-widget">
+    <span class="mem-label">MEM</span>
+    <div class="mem-bar-wrap"><div class="mem-bar-fill" id="mem-bar"></div></div>
+    <span id="mem-pct">—</span>
+  </div>
+  <div id="tb-clock">—</div>
+  <div class="spacer"></div>
+  <nav class="mainnav">
+    <button class="mnav on" data-view="actions"    onclick="goView('actions')">Actions</button>
+    <button class="mnav"    data-view="identity"   onclick="goView('identity')">Identity</button>
+    <button class="mnav"    data-view="network"    onclick="goView('network')">Network</button>
+    <button class="mnav"    data-view="governance" onclick="goView('governance')">Govern</button>
+    <button class="mnav"    data-view="compute"    onclick="goView('compute')">Compute</button>
+    <button class="mnav"    data-view="ai"         onclick="goView('ai')">AI</button>
+    <button class="mnav"    data-view="ledger"     onclick="goView('ledger')">Ledger</button>
+    <button class="mnav"    data-view="log"        onclick="goView('log')">Log</button>
+  </nav>
+</div>
+
+<div id="shell">
+
+<!-- ═══ ACTIONS ═══ -->
+<div class="view on" id="view-actions"><div class="maxw">
+  <div class="P">
+    <div class="P-hd">⬡ Create Action</div>
+    <div class="action-types">
+      <div class="atype message sel" onclick="ActionUI.select('message')"><div class="atype-icon">💬</div><div class="atype-name">Message</div><div class="atype-desc">Signed broadcast</div></div>
+      <div class="atype compute"    onclick="ActionUI.select('compute')"><div class="atype-icon">⚡</div><div class="atype-name">Compute</div><div class="atype-desc">Worker job + PoE</div></div>
+      <div class="atype governance" onclick="ActionUI.select('governance')"><div class="atype-icon">⚖</div><div class="atype-name">Propose</div><div class="atype-desc">BFT proposal</div></div>
+      <div class="atype analyze"   onclick="ActionUI.select('analyze')"><div class="atype-icon">🛡</div><div class="atype-name">Analyze</div><div class="atype-desc">AI threat scan</div></div>
+    </div>
+    <div class="action-form on" id="form-message">
+      <div class="afield"><label>Message</label><textarea id="msg-body" placeholder="What do you want to broadcast to the network?"></textarea></div>
+      <div class="afield"><label>Channel</label><input id="msg-chan" value="public"></div>
+      <button class="submit-action needs-identity" disabled onclick="ActionUI.submit('message')">⬡ Sign &amp; Broadcast</button>
+      <div id="action-result-message"></div>
+    </div>
+    <div class="action-form" id="form-compute">
+      <div class="afield"><label>Description</label><input id="comp-desc" placeholder="What does this compute?"></div>
+      <div class="afield"><label>JavaScript — ctx.random(), ctx.input, return value</label>
+        <textarea id="comp-code" rows="5" placeholder="const n=1000; let s=0; for(let i=0;i&lt;n;i++) s+=ctx.random(); return {mean:(s/n).toFixed(4)};"></textarea></div>
+      <button class="submit-action needs-identity" disabled onclick="ActionUI.submit('compute')">⚡ Submit to Worker Pool</button>
+      <div id="action-result-compute"></div>
+    </div>
+    <div class="action-form" id="form-governance">
+      <div class="afield"><label>Proposal Title</label><input id="gov-title" placeholder="e.g. Update routing TTL"></div>
+      <div class="afield"><label>Proposal Data (JSON)</label><textarea id="gov-data" rows="3" placeholder='{"action":"param_update","key":"ttl","value":8}'></textarea></div>
+      <div class="arow">
+        <div class="afield"><label>Threshold (0–1)</label><input id="gov-threshold" type="number" value="0.67" min="0.1" max="1" step="0.01"></div>
+      </div>
+      <button class="submit-action needs-identity" disabled onclick="ActionUI.submit('governance')">⚖ Submit Proposal</button>
+      <div id="action-result-governance"></div>
+    </div>
+    <div class="action-form" id="form-analyze">
+      <div class="afield"><label>Signal / Text to Analyze</label><textarea id="ana-input" rows="3" placeholder="Paste any message, peer behavior, or event for AI threat analysis…"></textarea></div>
+      <button class="submit-action needs-identity" disabled onclick="ActionUI.submit('analyze')">🛡 Run AI Analysis</button>
+      <div id="action-result-analyze"></div>
+    </div>
+  </div>
+  <div class="P"><div class="P-hd">⬡ Signed Action Feed</div><div id="action-feed"><div class="empty-state">No actions yet.</div></div></div>
+</div></div>
+
+<!-- ═══ IDENTITY ═══ -->
+<div class="view" id="view-identity"><div class="maxw">
+  <div id="identity-create-panel">
+    <div class="P">
+      <div class="P-hd">⬡ Create Node Identity</div>
+      <div class="P-sub">Generates an Ed25519 keypair locally. Your DID is derived from the public key. The private key never leaves this browser.</div>
+      <div class="arow">
+        <div class="afield"><label>Display Name</label><input id="new-name" placeholder="Node Operator"></div>
+        <div class="afield"><label>Bio</label><input id="new-bio" placeholder="Brief description"></div>
+      </div>
+      <button class="btn" id="btn-create-id" onclick="IdentityUI.create()">Generate Identity</button>
+      <div id="id-create-result"></div>
+    </div>
+  </div>
+  <div id="identity-active-panel" style="display:none">
+    <div class="P">
+      <div class="P-hd">Active Identity</div>
+      <div class="id-card">
+        <div class="id-name-lg" id="id-name-display">—</div>
+        <div class="id-bio-sm"  id="id-bio-display">—</div>
+        <div class="id-did"     id="id-did-display">—</div>
+        <div class="id-meta-sm">Created: <span id="id-created-display">—</span> · Nonce: <span id="id-nonce-display">0</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sm" onclick="IdentityUI.copyDID()">Copy DID</button>
+        <button class="btn btn-sm btn-a" onclick="openModal('Export Vault', document.getElementById('vault-export-modal-body').innerHTML)">🔒 Export Vault</button>
+        <button class="btn btn-sm btn-c" onclick="openModal('Import Vault', document.getElementById('vault-import-modal-body').innerHTML)">🔓 Import</button>
+      </div>
+    </div>
+    <div class="P">
+      <div class="P-hd c">◈ Cryptographic Details</div>
+      <div style="font-family:var(--sm);font-size:9px;color:var(--tx2);line-height:2.2">
+        Algorithm: <span style="color:var(--g)">Ed25519 (WebCrypto)</span><br>
+        DID method: <span style="color:var(--cy)">did:key (Multicodec 0xed01 + base58btc)</span><br>
+        Content addressing: <span style="color:var(--am)">SHA-256 canonical JSON</span><br>
+        Replay protection: <span style="color:var(--pu)">Monotonic nonce per author</span><br>
+        Vault encryption: <span style="color:var(--pk)">PBKDF2-SHA256 (600k) + AES-256-GCM</span>
+      </div>
+    </div>
+  </div>
+  <!-- Hidden modal bodies -->
+  <div id="vault-export-modal-body" style="display:none">
+    <div class="P-sub">Encrypt your keypair with a passphrase. The blob is safe to store anywhere.</div>
+    <div class="arow">
+      <div class="vault-field"><label>Passphrase</label><input type="password" id="vault-passphrase" placeholder="Strong passphrase (≥8 chars)"></div>
+      <div class="vault-field"><label>Confirm</label><input type="password" id="vault-pass-confirm" placeholder="Repeat passphrase"></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-sm btn-a" onclick="IdentityUI.exportVault()">🔒 Encrypt & Export</button></div>
+    <div id="vault-result" style="margin-top:8px"></div>
+    <div class="vault-field" style="margin-top:10px"><label>Encrypted Blob</label><textarea class="vault-data" id="vault-blob-out" readonly></textarea></div>
+  </div>
+  <div id="vault-import-modal-body" style="display:none">
+    <div class="vault-field"><label>Encrypted Blob</label><textarea class="signal-box" id="vault-import-json" rows="7" placeholder="Paste encrypted vault JSON…"></textarea></div>
+    <div class="vault-field"><label>Passphrase</label><input type="password" id="vault-import-pp" placeholder="Enter passphrase"></div>
+    <div class="btn-row"><button class="btn btn-sm btn-c" onclick="IdentityUI.importVault()">🔓 Decrypt & Restore</button></div>
+    <div id="vault-import-result" style="margin-top:8px"></div>
+  </div>
+</div></div>
+
+<!-- ═══ NETWORK ═══ -->
+<div class="view" id="view-network"><div class="maxw">
+  <div class="statrow">
+    <div class="sc"><div class="sc-k">Connected</div><div class="sc-v g" id="net-peers">0</div></div>
+    <div class="sc"><div class="sc-k">TX</div><div class="sc-v c" id="net-tx">0</div></div>
+    <div class="sc"><div class="sc-k">RX</div><div class="sc-v a" id="net-rx">0</div></div>
+    <div class="sc"><div class="sc-k">Status</div><div class="sc-v p" id="net-status">—</div></div>
+  </div>
+  <div class="P">
+    <div class="P-hd">Network Mesh</div>
+    <div class="P-sub">BroadcastChannel for same-origin tab discovery. WebRTC for cross-device P2P. Gossip protocol with content-addressed dedup.</div>
+    <canvas id="mesh-canvas"></canvas>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-sm" onclick="Mesh.makeOffer()">Make Offer</button>
+      <button class="btn btn-sm btn-a" onclick="showSignalModal()">Manual Signal</button>
+      <button class="btn btn-sm btn-c" id="btn-sync-all" onclick="Mesh.getPeerList().forEach(p=>Mesh.requestSync(p.did));toast('Sync requested','info')">Sync All Peers</button>
+    </div>
+  </div>
+  <div class="P"><div class="P-hd">Connected Peers</div><div id="peer-list"><div class="empty-state">No peers — open another tab to auto-connect via BroadcastChannel</div></div></div>
+  <div class="P"><div class="P-hd">Network Log</div><div class="log" id="net-log"><div class="empty-state" style="padding:6px">No events</div></div></div>
+</div></div>
+
+<!-- ═══ GOVERNANCE ═══ -->
+<div class="view" id="view-governance"><div class="maxw">
+  <div class="statrow">
+    <div class="sc"><div class="sc-k">Proposals</div><div class="sc-v g" id="gov-total">0</div></div>
+    <div class="sc"><div class="sc-k">Decided</div><div class="sc-v c" id="gov-decided">0</div></div>
+  </div>
+  <div class="P">
+    <div class="P-hd">⚖ Active Proposals</div>
+    <div class="P-sub">Proposals require signed votes. When yes votes ≥ threshold × total votes, the proposal executes automatically and is recorded as a DAG action.</div>
+    <div id="bft-proposals"><div class="empty-state">No proposals</div></div>
+  </div>
+</div></div>
+
+<!-- ═══ COMPUTE ═══ -->
+<div class="view" id="view-compute"><div class="maxw">
+  <div class="statrow">
+    <div class="sc"><div class="sc-k">Cells</div><div class="sc-v g" id="nb-cell-count">0</div></div>
+    <div class="sc"><div class="sc-k">Workers</div><div class="sc-v c">4</div></div>
+    <div class="sc"><div class="sc-k">Pool</div><div class="sc-v p" id="nb-pool-status">—</div></div>
+  </div>
+  <div class="P">
+    <div class="P-hd">⚡ Sovereign Compute — Isolated Worker Pool</div>
+    <div class="P-sub">Every cell runs in an isolated Web Worker. Execution is deterministic: seeded RNG, no DOM access, no network. Each result is content-hashed (Proof of Execution).</div>
+    <div class="worker-grid" id="worker-grid"></div>
+    <div class="btn-row" style="margin-bottom:12px">
+      <button class="btn btn-sm" onclick="ComputeUI.addCell()">+ Cell</button>
+    </div>
+    <div id="cell-list"></div>
+  </div>
+</div></div>
+
+<!-- ═══ AI ═══ -->
+<div class="view" id="view-ai"><div class="maxw">
+  <div class="P">
+    <div class="P-hd" style="color:var(--pk)">☯ AI Studio — Ollama Binding</div>
+    <div class="P-sub">Real streaming completions from a local Ollama instance. AI results are stored as signed actions on the DAG. Code blocks can be injected into the worker notebook.</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+      <div class="afield" style="margin:0;flex:1"><input id="ai-endpoint" value="http://localhost:11434" style="background:var(--bg);border:1px solid var(--b1);border-radius:5px;color:var(--tx);font-family:var(--sm);font-size:9px;padding:4px 8px;outline:none;width:100%"></div>
+      <div class="afield" style="margin:0;width:120px"><input id="ai-model" value="llama3.2" style="background:var(--bg);border:1px solid var(--b1);border-radius:5px;color:var(--tx);font-family:var(--sm);font-size:9px;padding:4px 8px;outline:none;width:100%"></div>
+      <button class="btn btn-sm btn-p" onclick="AIUI.checkConnection()">Ping</button>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="ai-preset on" onclick="AIUI.setMode('code',this)">Code</button>
+      <button class="ai-preset" onclick="AIUI.setMode('analyze',this)">Analyze</button>
+      <button class="ai-preset" onclick="AIUI.setMode('governance',this)">Governance</button>
+      <button class="ai-preset" onclick="AIUI.setMode('free',this)">Free</button>
+    </div>
+    <div class="ai-chat" id="ai-chat"><div class="ai-msg" style="background:rgba(157,96,255,.05);border:1px solid rgba(157,96,255,.15);color:var(--pu);align-self:center;font-family:var(--sm);font-size:8px;padding:6px 10px">AI Studio ready — responses stream token by token · Ctrl+Enter to send</div></div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="ai-input" rows="2" placeholder="Ask AI… Ctrl+Enter sends" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();AIUI.send();}"></textarea>
+      <button class="ai-send needs-identity" id="ai-send-btn" onclick="AIUI.send()">Send</button>
+    </div>
+    <div class="btn-row" style="margin-top:6px">
+      <button class="btn btn-sm" onclick="AIUI.clear()">Clear</button>
+      <button class="btn btn-sm btn-c" onclick="AIUI.stop()">Stop</button>
+      <button class="btn btn-sm btn-a" onclick="AIUI.quickPrompt('Write a JavaScript function that estimates π using Monte Carlo. Return {pi, n, error}.')">Monte Carlo π</button>
+      <button class="btn btn-sm btn-p" onclick="AIUI.quickPrompt('Write a JavaScript cell that generates an 80-point compound wave. Must return a numeric array for chart rendering.')">Wave chart</button>
+    </div>
+    <div id="ai-msg-count-display" style="margin-top:4px;font-family:var(--sm);font-size:7px;color:var(--tx3)">Messages: <span id="ai-msg-count">0</span></div>
+  </div>
+</div></div>
+
+<!-- ═══ LEDGER ═══ -->
+<div class="view" id="view-ledger"><div class="maxw">
+  <div class="statrow">
+    <div class="sc"><div class="sc-k">Total Actions</div><div class="sc-v g" id="ledger-count">0</div></div>
+  </div>
+  <div class="P">
+    <div class="P-hd c">◈ Content-Addressed Action DAG</div>
+    <div class="P-sub">Every action is identified by sha256(canonical(action)). The <code style="color:var(--cy)">prev</code> field links to the author's last action, forming a DAG. The entire history is replayable from scratch.</div>
+    <div class="btn-row" style="margin-bottom:10px">
+      <button class="btn btn-sm btn-c" onclick="LedgerUI.render()">Refresh</button>
+      <button class="btn btn-sm" onclick="LedgerUI.verifyIntegrity()">Verify Integrity</button>
+    </div>
+    <div id="ledger-verify-result" style="margin-bottom:8px"></div>
+    <div class="log" id="ledger-entries"><div class="empty-state" style="padding:8px">No entries</div></div>
+  </div>
+</div></div>
+
+<!-- ═══ LOG ═══ -->
+<div class="view" id="view-log"><div class="maxw">
+  <div class="P">
+    <div class="P-hd">⬡ System Log</div>
+    <div class="btn-row" style="margin-bottom:8px">
+      <button class="btn btn-sm" onclick="Log.clear()">Clear</button>
+      <label style="font-family:var(--sm);font-size:8px;color:var(--tx2);display:flex;align-items:center;gap:4px;margin-left:4px"><input type="checkbox" id="log-errors-only" onchange="Log._render()"> Errors only</label>
+      <span style="font-family:var(--sm);font-size:8px;color:var(--tx3);margin-left:4px">entries: <span id="log-count">0</span></span>
+    </div>
+    <div class="slog" id="sys-log"><div class="empty-state" style="padding:6px">No entries</div></div>
+  </div>
+</div></div>
+
+</div><!-- #shell -->
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════════════════
+//  PROTOCOL v1  ·  SOVEREIGN ACTION RUNTIME
+//  Every action is: { version, type, id, prev, payload, sig, nonce, ts }
+//  id      = sha256(canonical(action without id/sig))
+//  prev    = id of last action by this author (DAG link)
+//  sig     = Ed25519(id, privateKey)
+//  nonce   = author's monotonic counter (replay protection)
+// ════════════════════════════════════════════════════════════════════
+
+// ─── CRYPTO PRIMITIVES ───────────────────────────────────────────────
+const Crypto = (() => {
+  const subtle = window.crypto.subtle;
+
+  // Canonical JSON (deterministic key order)
+  function canonical(obj) {
+    if (typeof obj !== 'object' || obj === null) return JSON.stringify(obj);
+    if (Array.isArray(obj)) return '[' + obj.map(canonical).join(',') + ']';
+    const keys = Object.keys(obj).sort();
+    return '{' + keys.map(k => JSON.stringify(k) + ':' + canonical(obj[k])).join(',') + '}';
+  }
+
+  // SHA-256 → hex string
+  async function sha256(data) {
+    const bytes = typeof data === 'string'
+      ? new TextEncoder().encode(data)
+      : data;
+    const hash = await subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  // SHA-256 of canonical JSON
+  async function hashObject(obj) {
+    return sha256(canonical(obj));
+  }
+
+  // Generate Ed25519 keypair
+  async function generateKeypair() {
+    const kp = await subtle.generateKey({ name: 'Ed25519' }, true, ['sign','verify']);
+    const [pubRaw, privPkcs8] = await Promise.all([
+      subtle.exportKey('raw',   kp.publicKey),
+      subtle.exportKey('pkcs8', kp.privateKey),
+    ]);
+    return {
+      publicKey:  new Uint8Array(pubRaw),
+      privateKey: new Uint8Array(privPkcs8),
+      _pub: kp.publicKey,
+      _priv: kp.privateKey,
+    };
+  }
+
+  // Import keypair from stored hex
+  async function importKeypair(pubHex, privHex) {
+    const pubBytes  = hexToBytes(pubHex);
+    const privBytes = hexToBytes(privHex);
+    const [pub, priv] = await Promise.all([
+      subtle.importKey('raw',   pubBytes,  { name:'Ed25519' }, false, ['verify']),
+      subtle.importKey('pkcs8', privBytes, { name:'Ed25519' }, false, ['sign']),
+    ]);
+    return { publicKey: pubBytes, privateKey: privBytes, _pub: pub, _priv: priv };
+  }
+
+  // Sign a hex string (action id)
+  async function sign(hexId, kp) {
+    const bytes = hexToBytes(hexId);
+    const sig = await subtle.sign('Ed25519', kp._priv, bytes);
+    return bytesToHex(new Uint8Array(sig));
+  }
+
+  // Verify a signature
+  async function verify(hexId, sigHex, pubKeyBytes) {
+    try {
+      const pub = await subtle.importKey('raw', pubKeyBytes, { name:'Ed25519' }, false, ['verify']);
+      return await subtle.verify('Ed25519', pub, hexToBytes(sigHex), hexToBytes(hexId));
+    } catch { return false; }
+  }
+
+  // DID from public key: did:key:z + base58btc(pubkey)
+  function deriveDID(pubKeyBytes) {
+    // Multicodec prefix 0xed01 for Ed25519
+    const prefixed = new Uint8Array([0xed, 0x01, ...pubKeyBytes]);
+    return 'did:key:z' + base58btc(prefixed);
+  }
+
+  // Secure random bytes
+  function randomBytes(n) {
+    return window.crypto.getRandomValues(new Uint8Array(n));
+  }
+
+  // HKDF-SHA256 key derivation (for deterministic sub-keys)
+  async function hkdf(ikm, info, length = 32) {
+    const key = await subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
+    const bits = await subtle.deriveBits(
+      { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info: new TextEncoder().encode(info) },
+      key, length * 8
+    );
+    return new Uint8Array(bits);
+  }
+
+  return { canonical, sha256, hashObject, generateKeypair, importKeypair, sign, verify, deriveDID, randomBytes, hkdf };
+})();
+
+// ─── ENCODING UTILITIES ──────────────────────────────────────────────
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+
+function base58btc(bytes) {
+  let n = 0n;
+  for (const b of bytes) n = (n << 8n) | BigInt(b);
+  let result = '';
+  while (n > 0n) { result = BASE58_ALPHABET[Number(n % 58n)] + result; n /= 58n; }
+  for (const b of bytes) { if (b !== 0) break; result = '1' + result; }
+  return result;
+}
+
+function bytesToHex(b) { return Array.from(b).map(x => x.toString(16).padStart(2,'0')).join(''); }
+function hexToBytes(h) { return new Uint8Array(h.match(/.{2}/g).map(x => parseInt(x,16))); }
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function uid() { return bytesToHex(Crypto.randomBytes(16)); }
+
+// ─── INDEXED DB STORE ────────────────────────────────────────────────
+const Store = (() => {
+  const DB = 'sar-v1';
+  const VER = 2;
+  let db = null;
+
+  async function open() {
+    if (db) return db;
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB, VER);
+      req.onupgradeneeded = e => {
+        const d = e.target.result;
+        // actions: content-addressed by id
+        if (!d.objectStoreNames.contains('actions')) {
+          const s = d.createObjectStore('actions', { keyPath: 'id' });
+          s.createIndex('type',   'type');
+          s.createIndex('author', 'author');
+          s.createIndex('ts',     'ts');
+          s.createIndex('nonce',  'nonce');
+        }
+        // kv: identity, config, snapshots
+        if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
+        // seen: dedup set for gossip
+        if (!d.objectStoreNames.contains('seen')) d.createObjectStore('seen');
+        // peers: known peer DIDs
+        if (!d.objectStoreNames.contains('peers')) d.createObjectStore('peers', { keyPath: 'did' });
+      };
+      req.onsuccess = e => { db = e.target.result; res(db); };
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  // Put a single action (content-addressed, idempotent)
+  async function putAction(action) {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx  = d.transaction('actions', 'readwrite');
+      const req = tx.objectStore('actions').put(action);
+      req.onsuccess = () => res(action.id);
+      req.onerror   = e  => rej(e.target.error);
+    });
+  }
+
+  // Get action by id
+  async function getAction(id) {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx  = d.transaction('actions', 'readonly');
+      const req = tx.objectStore('actions').get(id);
+      req.onsuccess = e => res(e.target.result ?? null);
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  // Get all actions (optionally filtered by index)
+  async function queryActions({ index, value, limit = 200 } = {}) {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx = d.transaction('actions', 'readonly');
+      const store = tx.objectStore('actions');
+      const source = index ? store.index(index).getAll(value, limit) : store.getAll(null, limit);
+      source.onsuccess = e => res(e.target.result ?? []);
+      source.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  // Count actions
+  async function countActions() {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx  = d.transaction('actions', 'readonly');
+      const req = tx.objectStore('actions').count();
+      req.onsuccess = e => res(e.target.result);
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  // Check if we've seen an action id (gossip dedup)
+  async function hasSeen(id) {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx  = d.transaction('seen', 'readonly');
+      const req = tx.objectStore('seen').getKey(id);
+      req.onsuccess = e => res(e.target.result !== undefined);
+      req.onerror   = () => res(false);
+    });
+  }
+
+  async function markSeen(id) {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx  = d.transaction('seen', 'readwrite');
+      const req = tx.objectStore('seen').put(Date.now(), id);
+      req.onsuccess = () => res();
+      req.onerror   = () => res(); // non-fatal
+    });
+  }
+
+  // KV helpers
+  async function kv_get(key) {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx  = d.transaction('kv', 'readonly');
+      const req = tx.objectStore('kv').get(key);
+      req.onsuccess = e => res(e.target.result ?? null);
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+  async function kv_set(key, val) {
+    const d = await open();
+    return new Promise((res, rej) => {
+      const tx  = d.transaction('kv', 'readwrite');
+      const req = tx.objectStore('kv').put(val, key);
+      req.onsuccess = () => res();
+      req.onerror   = e => rej(e.target.error);
+    });
+  }
+
+  // Peer registry
+  async function putPeer(peer) { // { did, pubKey, lastSeen, reputation }
+    const d = await open();
+    return new Promise((res,rej) => {
+      const tx = d.transaction('peers','readwrite');
+      tx.objectStore('peers').put(peer).onsuccess = () => res();
+    });
+  }
+  async function getAllPeers() {
+    const d = await open();
+    return new Promise((res,rej) => {
+      const tx = d.transaction('peers','readonly');
+      tx.objectStore('peers').getAll().onsuccess = e => res(e.target.result??[]);
+    });
+  }
+
+  // Snapshot: store all action IDs we have, for sync
+  async function getActionIds() {
+    const d = await open();
+    return new Promise((res,rej) => {
+      const tx = d.transaction('actions','readonly');
+      tx.objectStore('actions').getAllKeys().onsuccess = e => res(e.target.result??[]);
+    });
+  }
+
+  return { putAction, getAction, queryActions, countActions, hasSeen, markSeen, kv_get, kv_set, putPeer, getAllPeers, getActionIds };
+})();
+
+// ─── IDENTITY VAULT ───────────────────────────────────────────────────
+const Identity = (() => {
+  let _did     = null;
+  let _kp      = null;
+  let _profile = null;
+  let _nonce   = 0;
+
+  // Deterministic DID from public key
+  function getDID()     { return _did; }
+  function getKP()      { return _kp; }
+  function getProfile() { return _profile; }
+  function isReady()    { return _kp !== null; }
+
+  // Monotonic nonce (replay protection)
+  function nextNonce()  { return ++_nonce; }
+  function getLastNonce(){ return _nonce; }
+
+  async function create(name, bio = '') {
+    _kp = await Crypto.generateKeypair();
+    _did = Crypto.deriveDID(_kp.publicKey);
+    _profile = { name, bio, created: Date.now() };
+    _nonce = 0;
+    await _persist();
+    return _did;
+  }
+
+  async function load() {
+    const saved = await Store.kv_get('identity');
+    if (!saved) return false;
+    try {
+      _kp      = await Crypto.importKeypair(saved.pubHex, saved.privHex);
+      _did     = saved.did;
+      _profile = saved.profile;
+      _nonce   = saved.nonce ?? 0;
+      return true;
+    } catch (e) {
+      console.error('Identity load error:', e);
+      return false;
+    }
+  }
+
+  async function _persist() {
+    await Store.kv_set('identity', {
+      did:     _did,
+      pubHex:  bytesToHex(_kp.publicKey),
+      privHex: bytesToHex(_kp.privateKey),
+      profile: _profile,
+      nonce:   _nonce,
+    });
+  }
+
+  async function updateNonce() { await Store.kv_set('identity-nonce', _nonce); }
+
+  // Export encrypted backup (PBKDF2 + AES-GCM)
+  async function exportEncrypted(passphrase) {
+    const salt = Crypto.randomBytes(16);
+    const iv   = Crypto.randomBytes(12);
+    const km   = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+    const key  = await window.crypto.subtle.deriveKey(
+      { name:'PBKDF2', salt, iterations:600000, hash:'SHA-256' }, km,
+      { name:'AES-GCM', length:256 }, false, ['encrypt']
+    );
+    const plain = new TextEncoder().encode(JSON.stringify({
+      did: _did, pubHex: bytesToHex(_kp.publicKey), privHex: bytesToHex(_kp.privateKey),
+      profile: _profile, nonce: _nonce
+    }));
+    const enc = await window.crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, plain);
+    return { v:1, salt: bytesToHex(salt), iv: bytesToHex(iv), data: bytesToHex(new Uint8Array(enc)) };
+  }
+
+  async function importEncrypted(blob, passphrase) {
+    const salt = hexToBytes(blob.salt), iv = hexToBytes(blob.iv), data = hexToBytes(blob.data);
+    const km  = await window.crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+    const key = await window.crypto.subtle.deriveKey(
+      { name:'PBKDF2', salt, iterations:600000, hash:'SHA-256' }, km,
+      { name:'AES-GCM', length:256 }, false, ['decrypt']
+    );
+    const dec  = await window.crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, data);
+    const saved = JSON.parse(new TextDecoder().decode(dec));
+    _kp = await Crypto.importKeypair(saved.pubHex, saved.privHex);
+    _did = saved.did; _profile = saved.profile; _nonce = saved.nonce ?? 0;
+    await _persist();
+    return _did;
+  }
+
+  return { create, load, getDID, getKP, getProfile, isReady, nextNonce, getLastNonce, exportEncrypted, importEncrypted, _persist };
+})();
+
+// ─── PROTOCOL: ACTION SCHEMA ─────────────────────────────────────────
+// Every action is canonical, content-addressed, signed
+const Protocol = {
+  VERSION: 1,
+
+  // All recognized action types
+  TYPES: {
+    GENESIS:    'genesis',
+    MESSAGE:    'message',
+    COMPUTE:    'compute',
+    COMPUTE_RESULT: 'compute.result',
+    GOVERN_PROPOSE: 'govern.propose',
+    GOVERN_VOTE:    'govern.vote',
+    ENDORSE:    'endorse',
+    PEER_HELLO: 'peer.hello',
+    SYNC_REQUEST: 'sync.request',
+    SYNC_OFFER:   'sync.offer',
+    AI_PROMPT:    'ai.prompt',
+    AI_RESULT:    'ai.result',
+  },
+
+  // Build and sign a new action
+  async build(type, payload, prevId = null) {
+    if (!Identity.isReady()) throw new Error('No identity loaded');
+    const nonce = Identity.nextNonce();
+    const draft = {
+      version: Protocol.VERSION,
+      type,
+      author:  Identity.getDID(),
+      prev:    prevId,   // DAG link to author's last action
+      nonce,
+      ts:      Date.now(),
+      payload,
+    };
+    // Content-address: id = sha256(canonical(draft))
+    const id  = await Crypto.hashObject(draft);
+    const sig = await Crypto.sign(id, Identity.getKP());
+    const action = { ...draft, id, sig };
+    return action;
+  },
+
+  // Full validation
+  async validate(action) {
+    // Schema
+    if (!action?.id || !action?.type || !action?.sig || !action?.author) {
+      return { ok: false, reason: 'missing required fields' };
+    }
+    if (!Object.values(Protocol.TYPES).includes(action.type)) {
+      return { ok: false, reason: 'unknown type: ' + action.type };
+    }
+
+    // Re-derive id from content
+    const { id, sig, ...body } = action;
+    const expectedId = await Crypto.hashObject(body);
+    if (id !== expectedId) {
+      return { ok: false, reason: 'id mismatch (content tampered)' };
+    }
+
+    // Signature verification — need author's public key
+    const authorPeer = await Store.kv_get('pubkey:' + action.author);
+    if (!authorPeer && action.author !== Identity.getDID()) {
+      // Can't verify unknown author yet — store with unverified flag
+      return { ok: true, verified: false, reason: 'unknown author public key' };
+    }
+    const pubKeyBytes = authorPeer
+      ? hexToBytes(authorPeer)
+      : Identity.getKP().publicKey;
+
+    const sigOk = await Crypto.verify(id, sig, pubKeyBytes);
+    if (!sigOk) return { ok: false, reason: 'invalid signature' };
+
+    return { ok: true, verified: true };
+  },
+};
+
+// ─── DAG — DIRECTED ACYCLIC GRAPH OF ACTIONS ─────────────────────────
+// Actions form a DAG: each action optionally links to a `prev` action by id.
+// This creates per-author chains and cross-author merge points.
+const DAG = {
+  // Tip tracking: author → latest action id
+  _tips: new Map(),
+
+  // In-memory index for quick ancestor lookups (session only)
+  _byAuthor: new Map(),
+
+  async init() {
+    const all = await Store.queryActions({ limit: 5000 });
+    for (const a of all) this._index(a);
+  },
+
+  _index(action) {
+    if (!this._byAuthor.has(action.author)) this._byAuthor.set(action.author, []);
+    this._byAuthor.get(action.author).push(action.id);
+    // Track tip: highest nonce wins
+    const cur = this._tips.get(action.author);
+    if (!cur || action.nonce > cur.nonce) {
+      this._tips.set(action.author, { id: action.id, nonce: action.nonce });
+    }
+  },
+
+  // Get the current tip id for an author
+  getTip(authorDid) {
+    return this._tips.get(authorDid)?.id ?? null;
+  },
+
+  // Get ancestors up to `maxDepth`
+  async ancestors(id, maxDepth = 10) {
+    const chain = [];
+    let cur = await Store.getAction(id);
+    let depth = 0;
+    while (cur && depth < maxDepth) {
+      chain.push(cur);
+      if (!cur.prev) break;
+      cur = await Store.getAction(cur.prev);
+      depth++;
+    }
+    return chain;
+  },
+
+  // Topological sort of a set of actions
+  topoSort(actions) {
+    // Kahn's algorithm on the DAG subset
+    const ids = new Set(actions.map(a => a.id));
+    const inDegree = new Map(actions.map(a => [a.id, 0]));
+    const edges = new Map(actions.map(a => [a.id, []]));
+    for (const a of actions) {
+      if (a.prev && ids.has(a.prev)) {
+        inDegree.set(a.id, (inDegree.get(a.id) ?? 0) + 1);
+        edges.get(a.prev).push(a.id);
+      }
+    }
+    const queue = actions.filter(a => (inDegree.get(a.id) ?? 0) === 0)
+                          .sort((a, b) => a.ts - b.ts);
+    const sorted = [];
+    while (queue.length) {
+      const node = queue.shift();
+      sorted.push(node);
+      for (const next of (edges.get(node.id) ?? [])) {
+        inDegree.set(next, (inDegree.get(next) ?? 0) - 1);
+        if (inDegree.get(next) === 0) {
+          queue.push(actions.find(a => a.id === next));
+          queue.sort((a,b) => a.ts - b.ts);
+        }
+      }
+    }
+    return sorted;
+  },
+
+  // Nonce-based conflict detection: reject if nonce ≤ last seen nonce from author
+  _lastNonce: new Map(),
+  checkNonce(action) {
+    const last = this._lastNonce.get(action.author) ?? -1;
+    if (action.nonce <= last) return false; // replay attempt
+    this._lastNonce.set(action.author, action.nonce);
+    return true;
+  },
+};
+
+// ─── EXECUTOR — DETERMINISTIC ACTION PROCESSOR ───────────────────────
+const Executor = (() => {
+  // Registered handlers: type → async fn(action) → sideEffects
+  const _handlers = new Map();
+  const _applied  = new Set(); // idempotency
+
+  function register(type, handler) { _handlers.set(type, handler); }
+
+  // Full pipeline: validate → dedup → nonce-check → execute
+  async function apply(action) {
+    // 1. Dedup: idempotent
+    if (_applied.has(action.id)) return { ok: true, reason: 'already applied' };
+    if (await Store.hasSeen(action.id)) {
+      _applied.add(action.id);
+      return { ok: true, reason: 'already seen' };
+    }
+
+    // 2. Validate
+    const validation = await Protocol.validate(action);
+    if (!validation.ok) return { ok: false, reason: validation.reason };
+
+    // 3. Nonce check (replay protection)
+    // Skip for our own actions that we're re-loading from DB
+    const isOurs = action.author === Identity.getDID();
+    if (!isOurs && !DAG.checkNonce(action)) {
+      return { ok: false, reason: 'nonce replay: ' + action.nonce };
+    }
+
+    // 4. Store to DAG
+    await Store.putAction(action);
+    await Store.markSeen(action.id);
+    _applied.add(action.id);
+    DAG._index(action);
+
+    // 5. Execute handler
+    const handler = _handlers.get(action.type);
+    if (handler) {
+      try { await handler(action); }
+      catch (e) { console.warn('Handler error for', action.type, e); }
+    }
+
+    // 6. Emit to runtime
+    Runtime.emit('action', action);
+
+    return { ok: true, id: action.id };
+  }
+
+  // Replay all stored actions in DAG order
+  async function replay() {
+    const all = await Store.queryActions({ limit: 10000 });
+    const sorted = DAG.topoSort(all);
+    let count = 0;
+    for (const action of sorted) {
+      if (!_applied.has(action.id)) {
+        _applied.add(action.id);
+        DAG._index(action);
+        const handler = _handlers.get(action.type);
+        if (handler) { try { await handler(action); } catch {} }
+        count++;
+      }
+    }
+    return count;
+  }
+
+  return { register, apply, replay };
+})();
+
+// ─── GOVERNANCE ENGINE ────────────────────────────────────────────────
+const Governance = (() => {
+  const _proposals = new Map(); // id → { action, votes: Map<did, voteAction>, executed }
+
+  function getProposals()  { return _proposals; }
+  function getProposal(id) { return _proposals.get(id) ?? null; }
+
+  // Register a proposal from an action
+  function _onPropose(action) {
+    const { proposalId = action.id, title, data, threshold = 0.67 } = action.payload;
+    _proposals.set(proposalId, {
+      id:        proposalId,
+      action,
+      title:     title ?? 'Untitled',
+      data,
+      threshold,
+      votes:     new Map(),
+      executed:  false,
+      ts:        action.ts,
+    });
+    Runtime.emit('proposal', { proposal: _proposals.get(proposalId) });
+  }
+
+  // Register a vote
+  async function _onVote(action) {
+    const { proposalId, choice } = action.payload; // choice: 'yes' | 'no'
+    const proposal = _proposals.get(proposalId);
+    if (!proposal || proposal.executed) return;
+    proposal.votes.set(action.author, { choice, action });
+    Runtime.emit('vote', { proposalId, voter: action.author, choice });
+
+    // Check threshold
+    await _checkFinality(proposalId);
+  }
+
+  async function _checkFinality(proposalId) {
+    const proposal = _proposals.get(proposalId);
+    if (!proposal || proposal.executed) return;
+    const votes = [...proposal.votes.values()];
+    const yes = votes.filter(v => v.choice === 'yes').length;
+    const total = votes.length;
+    if (total < 1) return;
+    // Require: yes/total >= threshold AND at least 1 vote
+    if (yes / Math.max(total, 1) >= proposal.threshold) {
+      proposal.executed = true;
+      proposal.result   = 'passed';
+      await _execute(proposal);
+      Runtime.emit('proposal:passed', { proposal });
+    } else if ((total - yes) / Math.max(total, 1) > (1 - proposal.threshold)) {
+      proposal.executed = true;
+      proposal.result   = 'failed';
+      Runtime.emit('proposal:failed', { proposal });
+    }
+  }
+
+  async function _execute(proposal) {
+    // Build an execution action on behalf of governance
+    if (!Identity.isReady()) return;
+    const action = await Protocol.build(Protocol.TYPES.GOVERN_PROPOSE, {
+      ...proposal.data,
+      _execution: true,
+      proposalId:  proposal.id,
+    }, DAG.getTip(Identity.getDID()));
+    // Don't re-validate governance loop — just record it
+    await Store.putAction(action);
+    Runtime.emit('govern:executed', { proposal, action });
+  }
+
+  // Submit a vote (creates + applies a signed vote action)
+  async function vote(proposalId, choice) {
+    if (!Identity.isReady()) throw new Error('No identity');
+    const action = await Protocol.build(
+      Protocol.TYPES.GOVERN_VOTE,
+      { proposalId, choice },
+      DAG.getTip(Identity.getDID())
+    );
+    return Executor.apply(action);
+  }
+
+  // Submit a proposal
+  async function propose(title, data, threshold = 0.67) {
+    if (!Identity.isReady()) throw new Error('No identity');
+    const action = await Protocol.build(
+      Protocol.TYPES.GOVERN_PROPOSE,
+      { title, data, threshold },
+      DAG.getTip(Identity.getDID())
+    );
+    return Executor.apply(action);
+  }
+
+  // Register handlers
+  Executor.register(Protocol.TYPES.GOVERN_PROPOSE, _onPropose);
+  Executor.register(Protocol.TYPES.GOVERN_VOTE,    _onVote);
+
+  return { getProposals, getProposal, vote, propose };
+})();
+
+// ─── COMPUTE ENGINE — REAL WORKER POOL ───────────────────────────────
+const Compute = (() => {
+  const POOL_SIZE = 4;
+  const workers   = [];
+  const queue     = [];
+  const inflight  = new Map(); // jobId → { resolve, reject, startTime }
+  let totalRun = 0;
+
+  // Isolated worker source — no DOM access, deterministic execution
+  // ── Shared compute logic (runs in worker OR inline fallback) ────────
+  function _makePRNG(seed) {
+    let s = 0;
+    for (let i = 0; i < seed.length; i++) s = ((s << 5) - s + seed.charCodeAt(i)) | 0;
+    s = s || 0xDEAD;
+    return function() { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 4294967296; };
+  }
+
+  function _djb2proof(val) {
+    const str = JSON.stringify(val);
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+    return (h >>> 0).toString(16).padStart(8, '0');
+  }
+
+  // Inline (main-thread) execution — used when Workers are unavailable
+  function _runInline(jobId, code, input, seed) {
+    const random = _makePRNG(seed || jobId);
+    const ctx    = { random, input: input || {}, jobId };
+    const t0     = Date.now();
+    try {
+      const fn      = new Function('ctx', '"use strict";' + code);
+      const raw     = fn(ctx);
+      const result  = (raw instanceof Promise) ? null : raw; // sync only in inline mode
+      const proof   = _djb2proof(result);
+      return { ok: true, jobId, result, proof, elapsed: Date.now() - t0 };
+    } catch (err) {
+      return { ok: false, jobId, error: err.message, elapsed: Date.now() - t0 };
+    }
+  }
+
+  // Worker source as a data: URI (avoids blob: origin restriction)
+  const WORKER_SRC = `'use strict';
+function _makePRNG(seed){let s=0;for(let i=0;i<seed.length;i++)s=((s<<5)-s+seed.charCodeAt(i))|0;s=s||0xDEAD;return function(){s^=s<<13;s^=s>>17;s^=s<<5;return(s>>>0)/4294967296;};}
+self.onmessage=async function(e){
+  const{jobId,code,input,seed}=e.data;
+  const random=_makePRNG(seed||jobId);
+  const ctx={random,input:input||{},jobId};
+  const t0=Date.now();
+  try{
+    const fn=new Function('ctx','"use strict";'+code);
+    const raw=fn(ctx);
+    const result=(raw instanceof Promise)?await raw:raw;
+    const str=JSON.stringify(result);
+    let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;
+    const proof=(h>>>0).toString(16).padStart(8,'0');
+    self.postMessage({ok:true,jobId,result,proof,elapsed:Date.now()-t0});
+  }catch(err){self.postMessage({ok:false,jobId,error:err.message,elapsed:Date.now()-t0});}
+};`;
+
+  let _useInline = false; // flipped to true if Worker construction fails
+
+  function _spawn() {
+    // Try data: URI first, then blob:, then give up and use inline fallback
+    const sources = [
+      () => new Worker('data:text/javascript;charset=utf-8,' + encodeURIComponent(WORKER_SRC)),
+      () => { const b = new Blob([WORKER_SRC], {type:'text/javascript'}); return new Worker(URL.createObjectURL(b)); },
+    ];
+    for (const make of sources) {
+      try {
+        const w    = make();
+        w.busy     = false;
+        w.idx      = workers.length;
+        w.onmessage = e => _onResult(w, e.data);
+        w.onerror   = e => {
+          // Worker threw — fall back to inline for this job
+          const keys = [...inflight.keys()];
+          if (keys.length) {
+            const inf = inflight.get(keys[0]);
+            if (inf) { inflight.delete(keys[0]); w.busy = false; inf.reject(new Error(e.message || 'Worker error')); }
+          }
+          _drain();
+        };
+        workers.push(w);
+        return w;
+      } catch (e) {
+        // try next source
+      }
+    }
+    // All Worker strategies failed — mark inline mode
+    _useInline = true;
+    return null;
+  }
+
+  function _onResult(w, data) {
+    w.busy = false;
+    const { jobId } = data;
+    const inf = inflight.get(jobId);
+    if (!inf) return;
+    inflight.delete(jobId);
+    data.elapsed = Date.now() - inf.startTime;
+    if (data.ok) inf.resolve(data);
+    else         inf.reject(new Error(data.error));
+    _drain();
+    Runtime.emit('worker:idle', { idx: w.idx });
+  }
+
+  function _dispatch(job, w) {
+    w.busy = true;
+    inflight.set(job.jobId, { resolve: job.resolve, reject: job.reject, startTime: Date.now() });
+    w.postMessage({ jobId: job.jobId, code: job.code, input: job.input, seed: job.seed });
+    Runtime.emit('worker:busy', { idx: w.idx });
+  }
+
+  function _drain() {
+    if (!queue.length) return;
+    const w = workers.find(w => !w.busy);
+    if (w) _dispatch(queue.shift(), w);
+  }
+
+  function init() {
+    for (let i = 0; i < POOL_SIZE; i++) _spawn();
+    const live = workers.filter(Boolean).length;
+    if (_useInline || live === 0) {
+      _useInline = true;
+      Log.add('COMPUTE', 'Workers unavailable — using inline execution (sandbox restriction)', 'warn');
+      toast('Compute: inline mode (Workers blocked by sandbox)', 'warn');
+    } else {
+      Log.add('COMPUTE', live + ' workers ready', 'ok');
+    }
+    return live;
+  }
+
+  // Run a code string — worker if available, inline otherwise
+  function run(code, input = {}, seed = uid()) {
+    if (_useInline || !workers.filter(w => w !== null).length) {
+      // Inline synchronous fallback — same interface, no isolation
+      return new Promise((resolve, reject) => {
+        const jobId = seed || uid();
+        // Yield to allow UI to update before blocking
+        setTimeout(() => {
+          const result = _runInline(jobId, code, input, seed || jobId);
+          if (result.ok) resolve(result);
+          else reject(new Error(result.error));
+        }, 0);
+      });
+    }
+    return new Promise((resolve, reject) => {
+      const jobId = uid();
+      const job   = { jobId, code, input, seed, resolve, reject };
+      const w     = workers.find(w => w && !w.busy);
+      if (w) _dispatch(job, w);
+      else   queue.push(job);
+    });
+  }
+
+  // Submit a compute action: build → execute → store result
+  async function submit(description, code, engineHint = 'js') {
+    if (!Identity.isReady()) throw new Error('No identity');
+    const jobId  = uid();
+    const action = await Protocol.build(
+      Protocol.TYPES.COMPUTE,
+      { description, code, engineHint, jobId },
+      DAG.getTip(Identity.getDID())
+    );
+    const applyResult = await Executor.apply(action);
+    if (!applyResult.ok) throw new Error(applyResult.reason);
+    return { actionId: action.id, jobId };
+  }
+
+  function status() {
+    if (_useInline) return [{ idx: 0, busy: false, mode: 'inline' }];
+    return workers.filter(Boolean).map((w, i) => ({ idx: i, busy: w.busy }));
+  }
+  function getStats() { return { totalRun, queued: queue.length, workers: workers.filter(Boolean).length, inflight: inflight.size, inline: _useInline }; }
+
+  // Handler: when a COMPUTE action arrives, run it in workers
+  Executor.register(Protocol.TYPES.COMPUTE, async (action) => {
+    totalRun++;
+    const { code, input, jobId, engineHint } = action.payload;
+    try {
+      const { result, proof, elapsed } = await run(code, input || {}, jobId);
+      // Store the result as a linked action
+      const resultAction = await Protocol.build(
+        Protocol.TYPES.COMPUTE_RESULT,
+        { jobId, result, proof, elapsed, parentId: action.id },
+        action.id // result's prev = the compute action
+      );
+      await Executor.apply(resultAction);
+    } catch (err) {
+      const errAction = await Protocol.build(
+        Protocol.TYPES.COMPUTE_RESULT,
+        { jobId, error: err.message, parentId: action.id },
+        action.id
+      );
+      await Executor.apply(errAction);
+    }
+  });
+
+  return { init, run, submit, status, getStats };
+})();
+
+// ─── AI ENGINE — REAL OLLAMA BINDING ─────────────────────────────────
+const AI = (() => {
+  let _endpoint = 'http://localhost:11434';
+  let _model    = 'llama3.2';
+  let _connected = false;
+
+  function setEndpoint(ep) { _endpoint = ep.trim(); }
+  function setModel(m)     { _model = m.trim(); }
+  function isConnected()   { return _connected; }
+
+  async function ping() {
+    try {
+      const r = await fetch(`${_endpoint}/api/tags`, { signal: AbortSignal.timeout(4000) });
+      if (r.ok) {
+        _connected = true;
+        const d = await r.json();
+        return { ok: true, models: d.models?.map(m => m.name) ?? [] };
+      }
+    } catch {}
+    _connected = false;
+    return { ok: false, models: [] };
+  }
+
+  // Non-streaming completion (returns full response)
+  async function complete(prompt, systemPrompt = '', opts = {}) {
+    const body = {
+      model:   opts.model  ?? _model,
+      prompt,
+      system:  systemPrompt,
+      stream:  false,
+      options: { temperature: opts.temperature ?? 0.3, num_predict: opts.maxTokens ?? 800 },
+    };
+    const r = await fetch(`${_endpoint}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(opts.timeout ?? 30000),
+    });
+    if (!r.ok) throw new Error('Ollama HTTP ' + r.status);
+    const d = await r.json();
+    return d.response ?? '';
+  }
+
+  // Streaming completion — calls onToken(str) incrementally
+  async function stream(prompt, systemPrompt = '', onToken, opts = {}) {
+    const body = {
+      model:   opts.model ?? _model,
+      prompt,
+      system:  systemPrompt,
+      stream:  true,
+      options: { temperature: opts.temperature ?? 0.3, num_predict: opts.maxTokens ?? 800 },
+    };
+    const r = await fetch(`${_endpoint}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: opts.signal ?? AbortSignal.timeout(60000),
+    });
+    if (!r.ok) throw new Error('Ollama HTTP ' + r.status);
+
+    const reader = r.body.getReader();
+    const dec    = new TextDecoder();
+    let full = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = dec.decode(value, { stream: true });
+      for (const line of chunk.split('\n').filter(Boolean)) {
+        try {
+          const obj = JSON.parse(line);
+          if (obj.response) { full += obj.response; onToken(obj.response); }
+          if (obj.done) break;
+        } catch {}
+      }
+    }
+    return full;
+  }
+
+  // Submit an AI prompt as an action, get result back as linked action
+  async function submitPrompt(prompt, systemPrompt = '', opts = {}) {
+    if (!Identity.isReady()) throw new Error('No identity');
+    const action = await Protocol.build(
+      Protocol.TYPES.AI_PROMPT,
+      { prompt: prompt.slice(0, 2000), system: systemPrompt.slice(0, 500), model: _model },
+      DAG.getTip(Identity.getDID())
+    );
+    await Executor.apply(action);
+    return action;
+  }
+
+  // Handler: when AI_PROMPT action arrives, call Ollama
+  Executor.register(Protocol.TYPES.AI_PROMPT, async (action) => {
+    const { prompt, system, model } = action.payload;
+    const savedModel = _model;
+    if (model) _model = model;
+    try {
+      const response = await complete(prompt, system);
+      const resultAction = await Protocol.build(
+        Protocol.TYPES.AI_RESULT,
+        { response: response.slice(0, 4000), parentId: action.id, model: _model },
+        action.id
+      );
+      await Executor.apply(resultAction);
+    } catch (err) {
+      const errAction = await Protocol.build(
+        Protocol.TYPES.AI_RESULT,
+        { error: err.message, parentId: action.id },
+        action.id
+      );
+      await Executor.apply(errAction);
+    } finally { _model = savedModel; }
+  });
+
+  return { setEndpoint, setModel, isConnected, ping, complete, stream, submitPrompt };
+})();
+
+// ─── MESH — REAL P2P LAYER ────────────────────────────────────────────
+// Transport: BroadcastChannel (same-origin tabs) + WebRTC (cross-device)
+// Protocol: gossip with dedup, partial sync on connect
+const Mesh = (() => {
+  let bc          = null;           // BroadcastChannel
+  const peers     = new Map();      // did → PeerConn
+  const pending   = new Map();      // sessionId → { pc, targetDid }
+  const _known    = new Set();      // DIDs we've seen announce
+  const STUN_SERVERS = [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ];
+
+  // ── BroadcastChannel ──
+  function initBC() {
+    try {
+      bc = new BroadcastChannel('sar-v1-mesh');
+      bc.onmessage = e => _handleEnvelope(e.data, null, 'bc');
+      // Announce self after identity is ready
+      setTimeout(() => _announce(), 500);
+      setInterval(() => _announce(), 8000);
+    } catch (e) { console.warn('BroadcastChannel unavailable', e); }
+  }
+
+  function _announce() {
+    if (!Identity.isReady()) return;
+    _bcSend({
+      type: 'ANNOUNCE',
+      did:  Identity.getDID(),
+      pubHex: bytesToHex(Identity.getKP().publicKey),
+      profile: Identity.getProfile(),
+    });
+  }
+
+  function _bcSend(msg) {
+    try { bc?.postMessage({ ...msg, from: Identity.getDID() ?? 'anon' }); } catch {}
+  }
+
+  // ── Envelope handling ──
+  async function _handleEnvelope(env, fromDid, transport) {
+    if (!env?.type) return;
+    const mine = Identity.getDID();
+
+    switch (env.type) {
+      case 'ANNOUNCE':
+        if (!env.did || env.did === mine) return;
+        // Store their public key for verification
+        if (env.pubHex) await Store.kv_set('pubkey:' + env.did, env.pubHex);
+        // Store peer record
+        await Store.putPeer({ did: env.did, pubHex: env.pubHex, profile: env.profile, lastSeen: Date.now() });
+        if (!_known.has(env.did)) {
+          _known.add(env.did);
+          // Attempt WebRTC if via BC
+          if (transport === 'bc' && !peers.has(env.did)) _initiateRTC(env.did);
+          Runtime.emit('peer:discovered', { did: env.did });
+        }
+        break;
+
+      case 'ACTION':
+        if (env.action) _receiveAction(env.action, env.from);
+        break;
+
+      case 'ACTIONS_BATCH':
+        if (Array.isArray(env.actions)) {
+          for (const a of env.actions) await _receiveAction(a, env.from);
+        }
+        break;
+
+      case 'SYNC_REQUEST':
+        // Peer wants actions they're missing
+        if (env.to === mine) _sendMissing(env.from, env.have ?? []);
+        break;
+
+      case 'OFFER':
+        if (env.to === mine) _handleOffer(env);
+        break;
+      case 'ANSWER':
+        if (env.to === mine) _handleAnswer(env);
+        break;
+      case 'ICE':
+        _handleICE(env);
+        break;
+    }
+  }
+
+  async function _receiveAction(action, fromDid) {
+    if (await Store.hasSeen(action.id)) return;
+    const result = await Executor.apply(action);
+    if (result.ok) {
+      // Gossip forward to other peers
+      _gossip(action, fromDid);
+    }
+  }
+
+  // Gossip: forward to all peers except sender
+  function _gossip(action, exceptDid = null) {
+    peers.forEach((peer, did) => {
+      if (did !== exceptDid && peer.dc?.readyState === 'open') {
+        try { peer.dc.send(JSON.stringify({ type: 'ACTION', action, from: Identity.getDID() })); }
+        catch {}
+      }
+    });
+    // Also over BC
+    if (exceptDid !== '__bc') {
+      _bcSend({ type: 'ACTION', action });
+    }
+  }
+
+  // Broadcast a new action to all peers
+  function broadcast(action) {
+    _gossip(action, '__self');
+  }
+
+  // ── Partial sync ──
+  async function _sendMissing(targetDid, theyHave) {
+    const weHave  = new Set(await Store.getActionIds());
+    const theySet = new Set(theyHave);
+    const missing = [...weHave].filter(id => !theySet.has(id));
+    if (!missing.length) return;
+
+    // Send in batches of 20
+    const batch = [];
+    for (const id of missing.slice(0, 100)) {
+      const a = await Store.getAction(id);
+      if (a) batch.push(a);
+    }
+    const peer = peers.get(targetDid);
+    if (peer?.dc?.readyState === 'open') {
+      peer.dc.send(JSON.stringify({ type: 'ACTIONS_BATCH', actions: batch, from: Identity.getDID() }));
+    } else {
+      _bcSend({ type: 'ACTIONS_BATCH', actions: batch.slice(0, 20) });
+    }
+  }
+
+  // Request sync from a peer
+  async function requestSync(peerDid) {
+    const have = await Store.getActionIds();
+    const msg  = { type: 'SYNC_REQUEST', from: Identity.getDID(), to: peerDid, have };
+    const peer = peers.get(peerDid);
+    if (peer?.dc?.readyState === 'open') {
+      peer.dc.send(JSON.stringify(msg));
+    } else {
+      _bcSend(msg);
+    }
+  }
+
+  // ── WebRTC ──
+  async function _initiateRTC(targetDid) {
+    if (peers.has(targetDid)) return;
+    const sid = uid();
+    const pc  = new RTCPeerConnection({ iceServers: STUN_SERVERS });
+    const dc  = pc.createDataChannel('sar', { ordered: true });
+    _setupDC(dc, targetDid);
+    _setupPC(pc, targetDid, sid);
+    peers.set(targetDid, { pc, dc, state: 'connecting', did: targetDid });
+    pending.set(sid, { pc, targetDid });
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await _waitICE(pc);
+    _bcSend({ type: 'OFFER', from: Identity.getDID(), to: targetDid, sdp: pc.localDescription, sid });
+  }
+
+  async function _handleOffer(msg) {
+    const { from, sdp, sid } = msg;
+    if (peers.has(from)) return;
+    const pc = new RTCPeerConnection({ iceServers: STUN_SERVERS });
+    pc.ondatachannel = e => _setupDC(e.channel, from);
+    _setupPC(pc, from, sid);
+    peers.set(from, { pc, dc: null, state: 'answering', did: from });
+    await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+    const ans = await pc.createAnswer();
+    await pc.setLocalDescription(ans);
+    await _waitICE(pc);
+    _bcSend({ type: 'ANSWER', from: Identity.getDID(), to: from, sdp: pc.localDescription, sid });
+  }
+
+  async function _handleAnswer(msg) {
+    const { from, sdp, sid } = msg;
+    const sess = pending.get(sid);
+    if (sess) {
+      pending.delete(sid);
+      await sess.pc.setRemoteDescription(new RTCSessionDescription(sdp)).catch(() => {});
+    }
+  }
+
+  function _handleICE(msg) {
+    const peer = peers.get(msg.from) ?? [...pending.values()].find(p => p.targetDid === msg.from);
+    if (peer?.pc && msg.candidate) {
+      peer.pc.addIceCandidate(new RTCIceCandidate(msg.candidate)).catch(() => {});
+    }
+  }
+
+  function _setupPC(pc, peerDid, sid) {
+    pc.onicecandidate = e => {
+      if (e.candidate) _bcSend({ type: 'ICE', from: Identity.getDID(), to: peerDid, candidate: e.candidate, sid });
+    };
+    pc.onconnectionstatechange = async () => {
+      const p = peers.get(peerDid); if (!p) return;
+      p.state = pc.connectionState;
+      if (pc.connectionState === 'connected') {
+        // Exchange public keys + request sync
+        p.dc?.send(JSON.stringify({
+          type: 'ANNOUNCE',
+          did:  Identity.getDID(),
+          pubHex: bytesToHex(Identity.getKP().publicKey),
+          profile: Identity.getProfile(),
+        }));
+        await requestSync(peerDid);
+        Runtime.emit('peer:connected', { did: peerDid });
+      }
+      if (['disconnected','failed','closed'].includes(pc.connectionState)) {
+        peers.delete(peerDid);
+        Runtime.emit('peer:disconnected', { did: peerDid });
+      }
+      Runtime.emit('peer:updated', { did: peerDid, state: pc.connectionState });
+    };
+  }
+
+  function _setupDC(dc, peerDid) {
+    const p = peers.get(peerDid); if (p) p.dc = dc;
+    dc.onmessage = async e => {
+      try { await _handleEnvelope(JSON.parse(e.data), peerDid, 'rtc'); }
+      catch {}
+    };
+  }
+
+  function _waitICE(pc) {
+    return new Promise(res => {
+      if (pc.iceGatheringState === 'complete') { res(); return; }
+      const h = () => { if (pc.iceGatheringState === 'complete') { pc.removeEventListener('icegatheringstatechange', h); res(); } };
+      pc.addEventListener('icegatheringstatechange', h);
+      setTimeout(res, 3000);
+    });
+  }
+
+  // Manual signal (cross-origin / cross-network)
+  function processSignal(json) {
+    try {
+      const msg = typeof json === 'string' ? JSON.parse(json) : json;
+      _handleEnvelope(msg, null, 'manual');
+    } catch (e) { throw new Error('Invalid signal: ' + e.message); }
+  }
+
+  async function makeOffer(targetDid = 'unknown-' + uid().slice(0,8)) {
+    await _initiateRTC(targetDid);
+  }
+
+  function getPeers()    { return peers; }
+  function getPeerList() { return [...peers.values()]; }
+  function peerCount()   { return peers.size; }
+
+  return { initBC, broadcast, requestSync, makeOffer, processSignal, getPeers, getPeerList, peerCount };
+})();
+
+// ─── RUNTIME EVENT BUS ────────────────────────────────────────────────
+const Runtime = (() => {
+  const _listeners = new Map();
+  let _startTime   = Date.now();
+
+  function on(event, cb)  {
+    if (!_listeners.has(event)) _listeners.set(event, []);
+    _listeners.get(event).push(cb);
+  }
+  function off(event, cb) {
+    const list = _listeners.get(event);
+    if (list) _listeners.set(event, list.filter(f => f !== cb));
+  }
+  function emit(event, data = {}) {
+    (_listeners.get(event) ?? []).forEach(cb => { try { cb(data); } catch {} });
+    (_listeners.get('*') ?? []).forEach(cb => { try { cb({ event, ...data }); } catch {} });
+  }
+  function uptime() { return Date.now() - _startTime; }
+
+  return { on, off, emit, uptime };
+})();
+
+// ─── BOOTSTRAP — ORDERED INIT SEQUENCE ───────────────────────────────
+const Bootstrap = {
+  async run(onStep = () => {}) {
+    const steps = [
+      ['Checking Ed25519 support…',    () => this._checkCrypto()],
+      ['Opening IndexedDB store…',     () => Store.kv_get('_init')],
+      ['Loading DAG index…',           () => DAG.init()],
+      ['Loading identity…',            () => Identity.load()],
+      ['Replaying stored actions…',    () => Executor.replay()],
+      ['Starting worker pool…',        () => Compute.init()],
+      ['Initialising mesh…',           () => Mesh.initBC()],
+      ['Probing Ollama…',              () => AI.ping().catch(() => {})],
+    ];
+
+    let i = 0;
+    for (const [label, fn] of steps) {
+      onStep(label, i / steps.length);
+      try { await fn(); } catch (e) { console.warn(label, e); }
+      i++;
+    }
+    onStep('Ready.', 1);
+
+    // Genesis action if first run
+    if (Identity.isReady()) {
+      const count = await Store.countActions();
+      if (count === 0) {
+        const genesis = await Protocol.build(Protocol.TYPES.GENESIS, {
+          version: Protocol.VERSION,
+          node:    Identity.getDID(),
+        }, null);
+        await Executor.apply(genesis);
+      }
+    }
+  },
+
+  async _checkCrypto() {
+    await window.crypto.subtle.generateKey({ name: 'Ed25519' }, false, ['sign','verify']);
+  },
+};
+// ════════════════════════════════════════════════════════════════════
+//  UI LAYER — data-driven shell over the runtime core
+// ════════════════════════════════════════════════════════════════════
+
+// ─── TINY DOM HELPERS ────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function el_(id, v) { const e = $(id); if (e) e.textContent = v; }
+function html_(id, v) { const e = $(id); if (e) e.innerHTML = v; }
+function show_(id) { const e = $(id); if (e) e.style.display = ''; }
+function hide_(id) { const e = $(id); if (e) e.style.display = 'none'; }
+function cls_(id, c, on) { const e = $(id); if (e) e.classList.toggle(c, on); }
+
+function toast(msg, type = 'ok') {
+  const w = $('toast-wrap'); if (!w) return;
+  const d = document.createElement('div');
+  d.className = 'toast ' + ({ ok: 'tok', warn: 'tw', err: 'te', info: 'ti' }[type] ?? 'ti');
+  d.textContent = msg; w.appendChild(d);
+  setTimeout(() => { d.style.opacity='0'; d.style.transition='opacity .2s'; setTimeout(()=>d.remove(),200); }, 3600);
+}
+
+function flash(id, type, msg) {
+  const e = $(id); if (!e) return;
+  const cls = type === 'ok' ? 'msg-ok' : type === 'err' ? 'msg-err' : 'msg-info';
+  e.innerHTML = `<div class="${cls}">${msg}</div>`;
+  if (type !== 'err') setTimeout(() => { if(e) e.innerHTML = ''; }, 6000);
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────
+const Views = {
+  current: 'actions',
+  go(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+    document.querySelectorAll('.mnav').forEach(b => b.classList.remove('on'));
+    $('view-' + id)?.classList.add('on');
+    document.querySelectorAll('.mnav').forEach(b => {
+      if (b.dataset.view === id) b.classList.add('on');
+    });
+    this.current = id;
+    if (id === 'network') setTimeout(() => MeshUI.drawCanvas(), 80);
+    if (id === 'governance') GovernUI.render();
+    if (id === 'identity') IdentityUI.render();
+    if (id === 'ledger') LedgerUI.render();
+  }
+};
+
+// ─── SYSTEM LOG ──────────────────────────────────────────────────────
+const Log = {
+  entries: [],
+  add(type, msg, level = 'info') {
+    const e = { ts: Date.now(), type, msg, level };
+    this.entries.unshift(e);
+    if (this.entries.length > 800) this.entries.pop();
+    this._render();
+  },
+  _render() {
+    const el = $('sys-log'); if (!el) return;
+    const filterErrors = $('log-errors-only')?.checked;
+    const entries = filterErrors ? this.entries.filter(e => e.level === 'err') : this.entries;
+    el.innerHTML = entries.slice(0, 100).map(e =>
+      `<div class="le"><span class="le-ts">${new Date(e.ts).toLocaleTimeString()}</span>` +
+      `<span class="le-type ${e.level}">${escapeHtml(e.type)}</span>` +
+      `<span class="le-msg">${escapeHtml(e.msg)}</span></div>`
+    ).join('') || '<div class="empty-state" style="padding:8px">No entries</div>';
+    el_('log-count', this.entries.length);
+  },
+  clear() { this.entries = []; this._render(); toast('Log cleared', 'ok'); },
+};
+
+// ─── IDENTITY UI ──────────────────────────────────────────────────────
+const IdentityUI = {
+  render() {
+    if (!Identity.isReady()) {
+      show_('identity-create-panel');
+      hide_('identity-active-panel');
+      return;
+    }
+    hide_('identity-create-panel');
+    show_('identity-active-panel');
+    const p = Identity.getProfile() ?? {};
+    el_('id-did-display', Identity.getDID());
+    el_('id-name-display', p.name ?? '—');
+    el_('id-bio-display',  p.bio  ?? '');
+    el_('id-created-display', p.created ? new Date(p.created).toLocaleString() : '—');
+    el_('id-nonce-display', Identity.getLastNonce());
+    // Topbar
+    const chip = $('id-chip');
+    if (chip) chip.textContent = Identity.getDID()?.slice(0, 28) + '…';
+    $('beacon')?.classList.add('live');
+    // Enable action buttons
+    document.querySelectorAll('.needs-identity').forEach(b => b.disabled = false);
+  },
+
+  async create() {
+    const name = $('new-name')?.value.trim() || 'Node Operator';
+    const bio  = $('new-bio')?.value.trim()  || '';
+    const btn  = $('btn-create-id');
+    if (btn) { btn.disabled = true; btn.textContent = 'Generating keys…'; }
+    try {
+      const did = await Identity.create(name, bio);
+      Log.add('IDENTITY', 'Created ' + did.slice(0, 30) + '…', 'ok');
+      toast('Identity created', 'ok');
+      this.render();
+      // Submit genesis-level hello to mesh
+      setTimeout(async () => {
+        const action = await Protocol.build(Protocol.TYPES.PEER_HELLO, {
+          profile: Identity.getProfile(),
+          pubHex:  bytesToHex(Identity.getKP().publicKey),
+        }, null);
+        await Executor.apply(action);
+        Mesh.broadcast(action);
+      }, 200);
+    } catch (e) {
+      flash('id-create-result', 'err', e.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Generate Identity'; }
+    }
+  },
+
+  copyDID() {
+    if (!Identity.isReady()) return;
+    navigator.clipboard.writeText(Identity.getDID()).then(() => toast('DID copied', 'ok'));
+  },
+
+  async exportVault() {
+    const pp  = $('vault-passphrase')?.value;
+    const pp2 = $('vault-pass-confirm')?.value;
+    if (!pp || pp.length < 8) { flash('vault-result', 'err', 'Passphrase must be ≥8 chars'); return; }
+    if (pp !== pp2)           { flash('vault-result', 'err', 'Passphrases do not match'); return; }
+    flash('vault-result', 'info', '⏳ Encrypting (PBKDF2 600k iters)…');
+    try {
+      const blob = await Identity.exportEncrypted(pp);
+      const out  = $('vault-blob-out');
+      if (out) out.value = JSON.stringify(blob, null, 2);
+      flash('vault-result', 'ok', '✓ Encrypted — copy the blob above');
+    } catch (e) { flash('vault-result', 'err', e.message); }
+  },
+
+  async importVault() {
+    const pp  = $('vault-import-pp')?.value;
+    const raw = $('vault-import-json')?.value;
+    if (!pp || !raw) { flash('vault-import-result', 'err', 'Fill in both fields'); return; }
+    flash('vault-import-result', 'info', '⏳ Decrypting…');
+    try {
+      const blob = JSON.parse(raw);
+      const did  = await Identity.importEncrypted(blob, pp);
+      flash('vault-import-result', 'ok', '✓ Restored: ' + did.slice(0, 30) + '…');
+      this.render();
+    } catch (e) { flash('vault-import-result', 'err', 'Decryption failed — wrong passphrase?'); }
+  },
+};
+
+// ─── ACTION UI ────────────────────────────────────────────────────────
+const ActionUI = {
+  _selectedType: 'message',
+
+  select(type) {
+    this._selectedType = type;
+    document.querySelectorAll('.atype').forEach(a => a.classList.remove('sel'));
+    document.querySelectorAll('.action-form').forEach(f => f.classList.remove('on'));
+    document.querySelector('.atype.' + type)?.classList.add('sel');
+    $('form-' + type)?.classList.add('on');
+  },
+
+  async submit(type) {
+    if (!Identity.isReady()) { toast('Create an identity first', 'warn'); return; }
+    const btn = $('btn-' + type);
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+    try {
+      let payload, action;
+      const prev = DAG.getTip(Identity.getDID());
+
+      if (type === 'message') {
+        const body = $('msg-body')?.value.trim();
+        if (!body) { toast('Message cannot be empty', 'warn'); return; }
+        payload = { body, channel: $('msg-chan')?.value.trim() || 'public' };
+      }
+      else if (type === 'compute') {
+        const code = $('comp-code')?.value;
+        if (!code?.trim()) { toast('Code required', 'warn'); return; }
+        const { actionId } = await Compute.submit(
+          $('comp-desc')?.value.trim() || 'Compute job',
+          code
+        );
+        flash('action-result-compute', 'info', '⏳ Job submitted, running in worker…');
+        return; // result arrives via event
+      }
+      else if (type === 'governance') {
+        const title = $('gov-title')?.value.trim();
+        if (!title) { toast('Title required', 'warn'); return; }
+        let data = $('gov-data')?.value;
+        try { data = JSON.parse(data); } catch {}
+        const thresh = parseFloat($('gov-threshold')?.value) || 0.67;
+        await Governance.propose(title, data, thresh);
+        flash('action-result-governance', 'ok', '✓ Proposal submitted to BFT');
+        GovernUI.render();
+        return;
+      }
+      else if (type === 'analyze') {
+        const input = $('ana-input')?.value.trim();
+        if (!input) { toast('Input required', 'warn'); return; }
+        const promptAction = await AI.submitPrompt(
+          'Analyze this for threat level, intent, and recommended response:\n\n' + input,
+          'You are a sovereign P2P governance threat analyst. Respond in JSON: {"threat":0-100,"intent":"string","verb":"MONITOR|WARN|ISOLATE|ESCALATE","rationale":"string"}'
+        );
+        flash('action-result-analyze', 'info', '⏳ Analyzing with AI…');
+        return;
+      }
+
+      action = await Protocol.build(type, payload, prev);
+      const result = await Executor.apply(action);
+      if (!result.ok) throw new Error(result.reason);
+      Mesh.broadcast(action);
+      flash('action-result-' + type, 'ok', `✓ Signed + broadcast · id:${action.id.slice(0,16)}…`);
+      Log.add('ACTION', type + ' broadcast · id:' + action.id.slice(0,12), 'ok');
+      FeedUI.render();
+
+    } catch (e) {
+      flash('action-result-' + type, 'err', e.message);
+      Log.add('ACTION', 'Error: ' + e.message, 'err');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = _btnLabel(type); }
+    }
+  },
+};
+
+function _btnLabel(type) {
+  return { message:'⬡ Sign & Broadcast', compute:'⚡ Submit Job', governance:'⚖ Submit Proposal', analyze:'🛡 Analyze' }[type] ?? 'Submit';
+}
+
+// ─── FEED UI ──────────────────────────────────────────────────────────
+const FeedUI = {
+  async render() {
+    const el = $('action-feed'); if (!el) return;
+    const actions = await Store.queryActions({ limit: 50 });
+    const sorted  = actions.sort((a, b) => b.ts - a.ts);
+    if (!sorted.length) {
+      el.innerHTML = '<div class="empty-state">No actions yet.</div>';
+      return;
+    }
+    el.innerHTML = sorted.slice(0, 30).map(a => {
+      const isOurs = a.author === Identity.getDID();
+      const body   = a.payload?.body ?? a.payload?.description ?? a.payload?.title ?? a.payload?.prompt ?? '[' + a.type + ']';
+      return `<div class="feed-item">
+        <div class="feed-top">
+          <span class="feed-kind fk-${a.type.split('.')[0]}">${a.type}</span>
+          <span class="feed-author">${isOurs ? 'you' : escapeHtml(a.author?.slice(8,24) + '…')}</span>
+          <span class="feed-time">${new Date(a.ts).toLocaleTimeString()}</span>
+        </div>
+        <div class="feed-body">${escapeHtml(String(body).slice(0, 200))}</div>
+        <div class="feed-sig">id:${a.id.slice(0,16)}… nonce:${a.nonce} prev:${a.prev?.slice(0,12) ?? 'genesis'}</div>
+      </div>`;
+    }).join('');
+  },
+};
+
+// ─── GOVERNANCE UI ────────────────────────────────────────────────────
+const GovernUI = {
+  render() {
+    const proposals = Governance.getProposals();
+    el_('gov-total',    proposals.size);
+    el_('gov-decided',  [...proposals.values()].filter(p => p.executed).length);
+    const list = $('bft-proposals'); if (!list) return;
+    if (!proposals.size) {
+      list.innerHTML = '<div class="empty-state">No proposals</div>';
+      return;
+    }
+    list.innerHTML = '';
+    proposals.forEach((p) => {
+      const yes = [...p.votes.values()].filter(v => v.choice === 'yes').length;
+      const no  = [...p.votes.values()].filter(v => v.choice === 'no').length;
+      const tot = Math.max(yes + no, 1);
+      const myVote = p.votes.get(Identity.getDID());
+      const div = document.createElement('div');
+      div.className = 'prop-card';
+      div.innerHTML = `
+        <div class="prop-id">${escapeHtml(p.id.slice(0,16))}…</div>
+        <div class="prop-data"><strong>${escapeHtml(p.title)}</strong></div>
+        <div class="prop-meta">
+          yes:${yes} no:${no} · threshold:${Math.round(p.threshold*100)}% ·
+          ${p.executed ? `<span class="result-${p.result}">${p.result?.toUpperCase()}</span>` : '<span style="color:var(--am)">pending</span>'}
+          ${myVote ? ` · you voted <span style="color:var(--cy)">${myVote.choice}</span>` : ''}
+        </div>
+        <div class="vote-bar">
+          <div class="vfy" style="width:${(yes/tot*100).toFixed(0)}%"></div>
+          <div class="vfn" style="width:${(no/tot*100).toFixed(0)}%;margin-left:auto"></div>
+        </div>
+        ${!p.executed && !myVote ? `<div class="btn-row">
+          <button class="btn btn-sm needs-identity" onclick="GovernUI.vote('${p.id}','yes')">Vote Yes</button>
+          <button class="btn btn-sm btn-r needs-identity" onclick="GovernUI.vote('${p.id}','no')">Vote No</button>
+        </div>` : ''}
+      `;
+      list.appendChild(div);
+    });
+  },
+
+  async vote(proposalId, choice) {
+    if (!Identity.isReady()) { toast('No identity', 'warn'); return; }
+    try {
+      await Governance.vote(proposalId, choice);
+      toast('Vote cast: ' + choice, 'ok');
+      this.render();
+    } catch (e) { toast('Vote error: ' + e.message, 'err'); }
+  },
+};
+
+// ─── MESH UI ──────────────────────────────────────────────────────────
+const MeshUI = {
+  _af: null,
+  drawCanvas() {
+    const canvas = $('mesh-canvas'); if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const draw = () => {
+      this._af = requestAnimationFrame(draw);
+      canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+      const W = canvas.width, H = canvas.height, cx = W/2, cy = H/2, t = Date.now()/1000;
+      ctx.clearRect(0,0,W,H);
+      // Grid
+      ctx.strokeStyle='rgba(0,232,195,.03)'; ctx.lineWidth=1;
+      for(let x=0;x<W;x+=44){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+      for(let y=0;y<H;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+      // Rings
+      [48,76,108].forEach((r,i)=>{
+        ctx.strokeStyle=`rgba(0,232,195,${.07-i*.02})`;
+        ctx.beginPath(); ctx.arc(cx,cy,r+Math.sin(t*1.4+i)*4,0,Math.PI*2); ctx.stroke();
+      });
+      // Self node
+      ctx.fillStyle='rgba(0,232,195,.08)'; ctx.beginPath(); ctx.arc(cx,cy,18,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#00e8c3'; ctx.beginPath(); ctx.arc(cx,cy,9,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(3,6,8,.9)'; ctx.font='bold 7px Space Mono,monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('YOU',cx,cy);
+      // Peers
+      const peerList = Mesh.getPeerList();
+      peerList.forEach((p, i) => {
+        const ang = (i/Math.max(peerList.length,1))*Math.PI*2 - Math.PI/2;
+        const r2  = 142 + Math.sin(t+i)*6;
+        const px = cx+Math.cos(ang)*r2, py = cy+Math.sin(ang)*r2;
+        const col = p.state==='connected'?'#00e8c3':p.state==='connecting'?'#ffb000':'#ff3355';
+        ctx.strokeStyle=col+'33'; ctx.lineWidth=1; ctx.setLineDash([4,8]);
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle=col+'18'; ctx.beginPath(); ctx.arc(px,py,13,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle=col; ctx.beginPath(); ctx.arc(px,py,6,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='rgba(3,6,8,.9)'; ctx.font='6px Space Mono,monospace';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('P'+i, px, py);
+      });
+    };
+    if (this._af) cancelAnimationFrame(this._af);
+    draw();
+  },
+
+  renderPeerList() {
+    const list = $('peer-list'); if (!list) return;
+    const peers = Mesh.getPeerList();
+    el_('chip-peers', peers.length);
+    if (!peers.length) { list.innerHTML='<div class="empty-state">No peers — open another tab or use Offer/Answer</div>'; return; }
+    list.innerHTML = peers.map(p => {
+      const col = p.state==='connected'?'var(--g)':p.state==='connecting'?'var(--am)':'var(--re)';
+      return `<div class="peer-card">
+        <div class="peer-dot" style="background:${col};box-shadow:0 0 8px ${col}44"></div>
+        <div class="peer-id">${escapeHtml(p.did ?? '—')}</div>
+        <div class="peer-st" style="color:${col}">${p.state}</div>
+        <button class="btn btn-sm btn-c" style="margin-left:auto" onclick="Mesh.requestSync('${escapeHtml(p.did??'')}').then(()=>toast('Sync requested','info'))">Sync</button>
+      </div>`;
+    }).join('');
+  },
+};
+
+// ─── LEDGER UI ────────────────────────────────────────────────────────
+const LedgerUI = {
+  async render() {
+    const count = await Store.countActions();
+    el_('chip-ledger', count);
+    el_('ledger-count', count);
+    const el = $('ledger-entries'); if (!el) return;
+    const actions = await Store.queryActions({ limit: 40 });
+    const sorted  = actions.sort((a,b) => b.ts - a.ts);
+    el.innerHTML = sorted.map(a => `
+      <div class="le">
+        <span class="le-ts">${new Date(a.ts).toLocaleTimeString()}</span>
+        <span class="le-type" style="color:var(--cy)">${escapeHtml(a.type)}</span>
+        <span class="le-msg" title="${escapeHtml(a.id)}">
+          ${escapeHtml(a.id.slice(0,16))}… · nonce:${a.nonce} · prev:${a.prev?.slice(0,8) ?? 'ø'}
+        </span>
+      </div>`).join('') || '<div class="empty-state" style="padding:8px">No entries</div>';
+  },
+
+  async verifyIntegrity() {
+    const el = $('ledger-verify-result'); if (!el) return;
+    el.innerHTML = '<div class="msg-info">Verifying…</div>';
+    const actions = await Store.queryActions({ limit: 5000 });
+    let broken = 0;
+    for (const a of actions) {
+      const { id, sig, ...body } = a;
+      const expectedId = await Crypto.hashObject(body);
+      if (id !== expectedId) broken++;
+    }
+    if (broken === 0) {
+      el.innerHTML = `<div class="msg-ok">✓ All ${actions.length} actions pass content-address check</div>`;
+    } else {
+      el.innerHTML = `<div class="msg-err">✗ ${broken} actions have id mismatches — possible tampering</div>`;
+    }
+  },
+};
+
+// ─── COMPUTE UI ───────────────────────────────────────────────────────
+const ComputeUI = {
+  _cells: [],
+  _chartInstances: {},
+
+  addCell(engine = 'js', code = '') {
+    const id  = 'cell-' + uid().slice(0, 8);
+    const num = this._cells.length + 1;
+    this._cells.push({ id, engine, num });
+    const wrap = $('cell-list'); if (!wrap) return;
+    const demos = {
+      js: `// Ctrl+Enter to run — full worker isolation, deterministic\nconst { random, input } = ctx;\nconst n = 2000;\nlet sum = 0;\nfor (let i = 0; i < n; i++) sum += random();\nreturn { mean: (sum/n).toFixed(6), n, seed: ctx.jobId.slice(0,8) };`,
+    };
+    const div = document.createElement('div');
+    div.className = 'nb-cell'; div.id = id;
+    div.innerHTML = `
+      <div class="nb-hdr">
+        <span class="nb-num">[${num}]</span>
+        <span class="nb-eng-pill ${engine}">${engine.toUpperCase()}</span>
+        <span class="nb-status" id="${id}-status">idle</span>
+        <button class="nb-run-btn" onclick="ComputeUI.runCell('${id}')">▶ Run</button>
+        <button class="nb-del-btn" onclick="ComputeUI.deleteCell('${id}')">✕</button>
+      </div>
+      <textarea class="nb-code" id="${id}-code" spellcheck="false"
+        onkeydown="if((event.ctrlKey||event.shiftKey)&&event.key==='Enter'){event.preventDefault();ComputeUI.runCell('${id}')}"
+      >${escapeHtml(code || demos[engine] || '')}</textarea>
+      <div class="nb-output" id="${id}-output"></div>
+    `;
+    wrap.appendChild(div);
+    el_('nb-cell-count', this._cells.length);
+    setTimeout(() => $(id + '-code')?.focus(), 60);
+    return id;
+  },
+
+  async runCell(id) {
+    const cell = this._cells.find(c => c.id === id); if (!cell) return;
+    const codeEl   = $(id + '-code');
+    const outEl    = $(id + '-output');
+    const statusEl = $(id + '-status');
+    if (!codeEl || !outEl) return;
+    const code = codeEl.value;
+    $(id)?.classList.remove('done','error','running');
+    $(id)?.classList.add('running');
+    if (statusEl) statusEl.textContent = 'running…';
+    outEl.innerHTML = '<div style="font-family:var(--jb);font-size:9px;color:var(--tx3)">⏳ worker executing…</div>';
+
+    const t0 = performance.now();
+    try {
+      const { result, proof, elapsed } = await Compute.run(code, {}, id);
+      const ms = elapsed || (performance.now() - t0).toFixed(0);
+      if (statusEl) statusEl.textContent = `done (${ms}ms · PoE:${proof})`;
+      $(id)?.classList.replace('running','done');
+
+      // Chart if numeric array
+      if (Array.isArray(result) && result.every(x => typeof x === 'number')) {
+        const cid = 'chart-' + id;
+        outEl.innerHTML = `<canvas id="${cid}" class="nb-out-chart"></canvas>`;
+        if (this._chartInstances[id]) this._chartInstances[id].destroy();
+        const ctx2 = $(cid)?.getContext('2d');
+        if (ctx2 && typeof Chart !== 'undefined') {
+          this._chartInstances[id] = new Chart(ctx2, {
+            type: 'line',
+            data: { labels: result.map((_,i)=>i), datasets:[{ data:result, borderColor:'#00e8c3', backgroundColor:'rgba(0,232,195,.07)', borderWidth:1.5, pointRadius:0, tension:0.4 }]},
+            options: { responsive:true, plugins:{legend:{display:false}}, scales:{x:{ticks:{color:'#3d7068',font:{size:8}}},y:{ticks:{color:'#3d7068',font:{size:8}}}}}
+          });
+        }
+        return;
+      }
+      outEl.innerHTML = `<div class="nb-out-ok">${escapeHtml(typeof result==='object'?JSON.stringify(result,null,2):String(result??'undefined'))}</div>`;
+      Log.add('CELL', `[${id.slice(0,8)}] ok ${ms}ms proof:${proof}`, 'ok');
+    } catch (err) {
+      if (statusEl) statusEl.textContent = 'error';
+      $(id)?.classList.replace('running','error');
+      outEl.innerHTML = `<div class="nb-out-err">✗ ${escapeHtml(err.message)}</div>`;
+      Log.add('CELL', `[${id.slice(0,8)}] err: ${err.message}`, 'err');
+    }
+  },
+
+  deleteCell(id) {
+    this._cells = this._cells.filter(c => c.id !== id);
+    $(id)?.remove();
+    if (this._chartInstances[id]) { this._chartInstances[id].destroy(); delete this._chartInstances[id]; }
+    el_('nb-cell-count', this._cells.length);
+  },
+
+  renderWorkerStatus() {
+    const grid  = $('worker-grid'); if (!grid) return;
+    const stats = Compute.status();
+    const { inline } = Compute.getStats();
+    grid.innerHTML = inline
+      ? `<div class="worker-dot idle" title="Inline mode — Workers blocked by sandbox" style="width:auto;padding:0 6px;font-size:7px;color:var(--am);border-color:rgba(255,176,0,.3);background:rgba(255,176,0,.08)">inline</div>`
+      : stats.map((w, i) =>
+          `<div class="worker-dot ${w.busy ? 'busy' : 'idle'}" title="Worker ${i}: ${w.busy ? 'busy' : 'idle'}">${w.busy ? '⚡' : '○'}</div>`
+        ).join('');
+    el_('nb-pool-status', inline ? 'inline mode' : stats.filter(w=>w.busy).length + '/' + stats.length + ' busy');
+  },
+};
+
+// ─── AI UI ────────────────────────────────────────────────────────────
+const AIUI = {
+  _history: [],
+  _streamController: null,
+  _mode: 'code',
+
+  SYSTEM_PROMPTS: {
+    code:       'You are a JS expert for a sovereign P2P runtime. Wrap all code in ```javascript blocks. Functions receive a ctx object with {random, input, jobId}. Use return to output results.',
+    analyze:    'You are a threat analysis AI. Respond with structured JSON: {threat:0-100, intent:string, verb:MONITOR|WARN|ISOLATE, rationale:string}',
+    audit:      'You are a Solidity auditor. Identify vulnerabilities by SWC-ID, severity, CVSS score, and remediation. Be precise and technical.',
+    governance: 'You are a DAO governance advisor. Help draft proposals. Return valid JSON objects.',
+    free:       'You are a helpful assistant in a sovereign compute environment. Be concise.',
+  },
+
+  setMode(m, btn) {
+    this._mode = m;
+    document.querySelectorAll('#view-ai .ai-preset').forEach(b => b.classList.remove('on'));
+    if (btn) btn.classList.add('on');
+  },
+
+  _addMsg(role, content) {
+    this._history.push({ role, content });
+    this._renderChat();
+  },
+
+  _renderChat() {
+    const chat = $('ai-chat'); if (!chat) return;
+    chat.innerHTML = '';
+    this._history.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'ai-msg ' + m.role;
+      const parts = m.content.split(/(```[\w]*\n[\s\S]*?```)/g);
+      let html = '';
+      parts.forEach(p => {
+        if (p.startsWith('```')) {
+          const code = p.replace(/```[\w]*\n?/,'').replace(/```$/,'').trim();
+          html += `<div class="ai-code">${escapeHtml(code)}<button class="ai-code-inject" onclick="AIUI.injectCode(${JSON.stringify(code)})">→ Cell</button></div>`;
+        } else if (p.trim()) {
+          html += `<span>${escapeHtml(p)}</span>`;
+        }
+      });
+      div.innerHTML = html || escapeHtml(m.content);
+      chat.appendChild(div);
+    });
+    el_('ai-msg-count', this._history.filter(m => m.role === 'user').length);
+    chat.scrollTop = chat.scrollHeight;
+  },
+
+  async send() {
+    const input = $('ai-input'); if (!input) return;
+    const text = input.value.trim(); if (!text) return;
+    const btn = $('ai-send-btn'); if (btn) btn.disabled = true;
+    input.value = '';
+    this._addMsg('user', text);
+
+    // Show streaming indicator
+    const chat = $('ai-chat');
+    const thinking = document.createElement('div');
+    thinking.className = 'ai-msg assistant';
+    thinking.id = 'ai-thinking';
+    thinking.innerHTML = '<span class="ai-cursor">▋</span>';
+    chat?.appendChild(thinking);
+    chat && (chat.scrollTop = chat.scrollHeight);
+
+    let accumulated = '';
+    const onToken = tok => {
+      accumulated += tok;
+      if (thinking) thinking.innerHTML = escapeHtml(accumulated) + '<span class="ai-cursor">▋</span>';
+      chat && (chat.scrollTop = chat.scrollHeight);
+    };
+
+    try {
+      const controller = new AbortController();
+      this._streamController = controller;
+      const full = await AI.stream(
+        text,
+        this.SYSTEM_PROMPTS[this._mode] ?? '',
+        onToken,
+        { signal: controller.signal }
+      );
+      thinking?.remove();
+      this._addMsg('assistant', full);
+      Log.add('AI', 'Response: ' + full.length + ' chars', 'ok');
+    } catch (e) {
+      thinking?.remove();
+      if (e.name !== 'AbortError') {
+        this._addMsg('assistant', `[Error: ${e.message}. Make sure Ollama is running.]`);
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+      this._streamController = null;
+    }
+  },
+
+  stop() {
+    this._streamController?.abort();
+  },
+
+  injectCode(code) {
+    Views.go('compute');
+    setTimeout(() => ComputeUI.addCell('js', code), 150);
+    toast('Code injected to notebook', 'ok');
+  },
+
+  quickPrompt(text) {
+    const input = $('ai-input'); if (input) input.value = text;
+    Views.go('ai');
+    setTimeout(() => this.send(), 100);
+  },
+
+  clear() { this._history = []; this._renderChat(); },
+
+  async checkConnection() {
+    const ep = $('ai-endpoint')?.value.trim() || 'http://localhost:11434';
+    AI.setEndpoint(ep);
+    const pill = $('ollama-pill'), txt = $('ollama-pill-txt');
+    if (pill) { pill.className = 'ollama-top check'; }
+    if (txt)  { txt.textContent = 'checking…'; }
+    const { ok, models } = await AI.ping();
+    if (pill) pill.className = 'ollama-top ' + (ok ? 'ok' : 'err');
+    if (txt)  txt.textContent = ok ? 'ollama·' + (models[0]?.slice(0,12) ?? 'ok') : 'ollama·off';
+    if (ok) toast('Ollama connected · ' + models.length + ' models', 'ok');
+    else    toast('Ollama not reachable', 'err');
+  },
+};
+
+// ─── RUNTIME EVENT HANDLERS (wire events → UI) ───────────────────────
+function wireEvents() {
+  Runtime.on('action', async (action) => {
+    // Update chips
+    const count = await Store.countActions();
+    el_('chip-ledger', count);
+    el_('chip-actions', S_actionCount++);
+
+    // Route to UI
+    FeedUI.render();
+    if (Views.current === 'governance') GovernUI.render();
+    if (Views.current === 'ledger')     LedgerUI.render();
+
+    // Log it
+    Log.add(action.type, action.id.slice(0,16) + '… nonce:' + action.nonce, 'info');
+
+    // Show compute results
+    if (action.type === Protocol.TYPES.COMPUTE_RESULT) {
+      const resultEl = $('action-result-compute');
+      if (resultEl) {
+        const { result, error, proof, elapsed, jobId } = action.payload;
+        if (error) {
+          resultEl.innerHTML = `<div class="msg-err">✗ Job failed: ${escapeHtml(error)}</div>`;
+        } else {
+          resultEl.innerHTML = `<div class="msg-ok">✓ Job complete (${elapsed}ms) · PoE:${proof}<br><pre style="margin-top:6px;font-size:10px;color:var(--g)">${escapeHtml(JSON.stringify(result,null,2).slice(0,400))}</pre></div>`;
+        }
+      }
+    }
+
+    // AI results
+    if (action.type === Protocol.TYPES.AI_RESULT) {
+      const { response, error } = action.payload;
+      const resultEl = $('action-result-analyze');
+      if (resultEl && error) resultEl.innerHTML = `<div class="msg-err">AI error: ${escapeHtml(error)}</div>`;
+      if (resultEl && response) {
+        try {
+          const parsed = JSON.parse(response.match(/\{[\s\S]*\}/)?.[0] ?? response);
+          resultEl.innerHTML = `<div class="msg-ok">
+            <strong style="color:var(--am)">${escapeHtml(parsed.verb ?? 'UNKNOWN')}</strong>
+            threat:${parsed.threat ?? '?'}/100 · ${escapeHtml((parsed.rationale ?? '').slice(0,150))}
+          </div>`;
+        } catch {
+          resultEl.innerHTML = `<div class="msg-ok">${escapeHtml(response.slice(0, 300))}</div>`;
+        }
+      }
+    }
+  });
+
+  Runtime.on('peer:connected', ({ did }) => {
+    toast('Peer connected: ' + did.slice(0,24) + '…', 'ok');
+    Log.add('MESH', 'Connected: ' + did.slice(0,24), 'ok');
+    MeshUI.renderPeerList();
+    el_('chip-peers', Mesh.peerCount());
+  });
+
+  Runtime.on('peer:disconnected', ({ did }) => {
+    Log.add('MESH', 'Disconnected: ' + did.slice(0,16), 'warn');
+    MeshUI.renderPeerList();
+    el_('chip-peers', Mesh.peerCount());
+  });
+
+  Runtime.on('peer:updated', () => { MeshUI.renderPeerList(); });
+
+  Runtime.on('proposal', () => GovernUI.render());
+  Runtime.on('vote', () => GovernUI.render());
+  Runtime.on('proposal:passed', ({ proposal }) => {
+    toast('Proposal PASSED: ' + proposal.title, 'ok');
+    GovernUI.render();
+  });
+  Runtime.on('proposal:failed', ({ proposal }) => {
+    toast('Proposal failed: ' + proposal.title, 'warn');
+    GovernUI.render();
+  });
+
+  Runtime.on('worker:busy',  () => ComputeUI.renderWorkerStatus());
+  Runtime.on('worker:idle',  () => ComputeUI.renderWorkerStatus());
+}
+
+let S_actionCount = 0;
+
+// ─── GLOBAL HELPERS (called from HTML) ───────────────────────────────
+function goView(id)   { Views.go(id); }
+function closeModal() { $('modal-bg')?.classList.remove('open'); }
+function openModal(title, body) {
+  el_('modal-title', title);
+  html_('modal-body', body);
+  $('modal-bg')?.classList.add('open');
+}
+$('modal-bg')?.addEventListener('click', e => { if (e.target === $('modal-bg')) closeModal(); });
+
+function showSignalModal() {
+  openModal('Manual P2P Signal', `
+    <div class="P-sub">Exchange Offer/Answer JSON for cross-device P2P.</div>
+    <div class="afield"><label>Signal JSON</label><textarea class="signal-box" id="signal-box" rows="8" placeholder="Paste Offer or Answer JSON here…"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-sm btn-c" onclick="Mesh.makeOffer().then(()=>toast('Offer ready','info'))">Generate Offer</button>
+      <button class="btn btn-sm btn-a" onclick="Mesh.processSignal($('signal-box').value);closeModal()">Process Signal</button>
+    </div>
+  `);
+}
+
+// ─── STATS REFRESH ───────────────────────────────────────────────────
+function startStatsPoller() {
+  async function tick() {
+    const count = await Store.countActions();
+    el_('chip-ledger', count);
+    el_('chip-peers', Mesh.peerCount());
+    const stats = Compute.getStats();
+    el_('nb-pool-status', stats.workers + ' workers · ' + stats.inflight + ' running');
+    // Memory
+    if (performance.memory) {
+      const pct = Math.round(performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit * 100);
+      const bar = $('mem-bar');
+      if (bar) { bar.style.width = pct + '%'; bar.style.background = pct>80?'var(--re)':pct>60?'var(--am)':'var(--g)'; }
+      el_('mem-pct', pct + '%');
+    }
+    // Clock
+    el_('tb-clock', new Date().toTimeString().slice(0,8));
+  }
+  tick();
+  setInterval(tick, 3000);
+}
+
+// ─── MAIN BOOT ────────────────────────────────────────────────────────
+async function main() {
+  const bootLines  = $('boot-lines');
+  const bootBar    = $('boot-bar');
+  const bootMsg    = $('boot-msg');
+
+  const onStep = (label, progress) => {
+    if (bootMsg)  bootMsg.textContent   = label;
+    if (bootBar)  bootBar.style.width   = (progress * 100) + '%';
+    if (bootLines) {
+      const d = document.createElement('div');
+      d.textContent = '> ' + label;
+      bootLines.appendChild(d);
+    }
+    Log.add('BOOT', label, 'info');
+  };
+
+  await Bootstrap.run(onStep);
+
+  // Wire UI ↔ runtime
+  wireEvents();
+  startStatsPoller();
+
+  // Render initial state
+  IdentityUI.render();
+  await FeedUI.render();
+  GovernUI.render();
+  await LedgerUI.render();
+  ComputeUI.renderWorkerStatus();
+
+  // Seed notebook with example cell
+  if ($('cell-list') && !$('cell-list').children.length) {
+    ComputeUI.addCell('js');
+  }
+
+  // Fade boot screen
+  await new Promise(r => setTimeout(r, 600));
+  const boot = $('boot');
+  if (boot) {
+    boot.style.transition = 'opacity .5s';
+    boot.style.opacity = '0';
+    setTimeout(() => { boot.style.display = 'none'; }, 520);
+  }
+
+  const gpuMode = GPU_MODE ?? 'js';
+  toast('SAR v1 online · ' + (Identity.isReady() ? Identity.getDID().slice(0,20)+'…' : 'no identity'), 'ok');
+  if (!Identity.isReady()) setTimeout(() => toast('⬡ Go to Identity to create your DID keypair', 'info'), 1200);
+  Log.add('BOOT', 'Runtime ready · uptime:' + Runtime.uptime() + 'ms', 'ok');
+}
+
+let GPU_MODE = 'js';
+main().catch(e => { console.error('Boot error:', e); el_('boot-msg', 'Error: ' + e.message); });
+</script>
+</body>
+</html>
