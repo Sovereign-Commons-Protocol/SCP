@@ -282,7 +282,6 @@
                 <option>MINT</option>
                 <option>BURN</option>
                 <option>TRANSFER</option>
-                <option>REGISTER_NODE</option>
                 <option>SET_KEY</option>
                 <option>MESSAGE</option>
               </select>
@@ -810,6 +809,8 @@
     set('net-transport', kernel.network.isSwReady() ? 'SW + WebRTC' : 'BC + WebRTC')
     $('commit-btn').disabled = false
     $('msg-send-btn').disabled = false
+    // Now that identity is set, populate the payload hint for the current action
+    UI.updatePayloadHint($('commit-action').value)
     addBootLog('✓ Ready — ' + algo + ' · ' + events + ' events replayed', 'ok')
     toast('SNR Node ready', 'ok')
     renderLog()
@@ -912,14 +913,13 @@
     updatePayloadHint(action) {
       const myId = kernel.identity?.nodeId ?? 'YOUR_NODE_ID'
       const hints = {
-        SET:           { ns: 'demo', key: 'hello', value: 'world' },
-        DELETE:        { ns: 'demo', key: 'hello' },
-        MINT:          { to: myId, amount: 100, token: 'credits' },
-        BURN:          { from: myId, amount: 10, token: 'credits' },
-        TRANSFER:      { from: myId, to: 'PEER_NODE_ID', amount: 10, token: 'credits' },
-        REGISTER_NODE: { nodeId: myId, did: `did:snr:${myId}`, publicKeyHex: '(auto — use genesis only)' },
-        SET_KEY:       { key: 'my:custom:key', value: 'anything' },
-        MESSAGE:       { text: 'Hello network', to: null },
+        SET:      { ns: 'demo', key: 'hello', value: 'world' },
+        DELETE:   { ns: 'demo', key: 'hello' },
+        MINT:     { to: myId, amount: 100, token: 'credits' },
+        BURN:     { from: myId, amount: 10, token: 'credits' },
+        TRANSFER: { from: myId, to: 'PEER_NODE_ID', amount: 10, token: 'credits' },
+        SET_KEY:  { key: 'my:custom:key', value: 'anything' },
+        MESSAGE:  { text: 'Hello network', to: null },
       }
       const hint = hints[action.toUpperCase()]
       if (hint) $('commit-payload').value = JSON.stringify(hint, null, 2)

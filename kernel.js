@@ -215,10 +215,13 @@ export class Kernel extends Emitter {
     const event = await this.log.append({ action, payload, actor: this.identity.nodeId, signature })
 
     // 4. Apply to state
+    let stateError = null
     try {
       this.state.apply(event)
     } catch (e) {
-      // State errors don't unwind the log — log is truth
+      // Log is already written — log is truth, we don't unwind.
+      // But we DO surface the error so the UI can show it.
+      stateError = e
       this.emit('error', { source: 'state:apply', event, error: e.message })
     }
 
@@ -231,6 +234,10 @@ export class Kernel extends Emitter {
     // 7. Notify
     this.emit('commit', event)
     this.integrity.recordValid(this.identity.nodeId)
+
+    // Surface state error AFTER log/persist/broadcast succeed
+    if (stateError) throw stateError
+
     return event
   }
 
